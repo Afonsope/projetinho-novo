@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="cadastro-title">Cadastro - Sistema Educacional TEA</title>
+    <link rel="icon" type="image/png" href="./assents/imgs/logos/logo.png">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- CSS Externo -->
+    <link rel="stylesheet" href="./assents/styles/style.css">
+    
+    <style>
+        body {
+            width: 100%;
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .cadastro-wrapper {
+            width: 100%;
+            max-width: 700px;
+            border-radius: 20px;
+            animation: slideIn 0.5s ease-out;
+            overflow: hidden;
+        }
+
+        .cadastro-header {
+            padding: 30px 25px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-light) 100%);
+            color: black;
+        }
+
+        .cadastro-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .cadastro-header p {
+            font-size: 1rem;
+            opacity: 0.95;
+            margin: 0;
+        }
+
+        .cadastro-body {
+            padding: 30px 25px;
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--primary-green);
+        }
+
+        .section-icon {
+            font-size: 1.8rem;
+            margin-right: 15px;
+        }
+
+        .section-title h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group select,
+        body.dark-mode .form-group textarea {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--dark-text);
+            border-color: var(--border-color);
+        }
+
+        body.light-mode .form-group input,
+        body.light-mode .form-group select,
+        body.light-mode .form-group textarea {
+            background: white;
+            color: var(--light-text);
+            border: 2px solid #E0E0E0;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-green-light);
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+            outline: none;
+        }
+
+        .form-group input::placeholder {
+            color: var(--light-text-secondary);
+        }
+
+        body.dark-mode .form-group input::placeholder {
+            color: var(--dark-text-secondary);
+        }
+
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .checkbox-group,
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 12px;
+        }
+
+        .checkbox-item,
+        .radio-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-item input[type="checkbox"],
+        .radio-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-right: 8px;
+            accent-color: var(--primary-green);
+        }
+
+        .checkbox-item label,
+        .radio-item label {
+            margin: 0;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .info-box {
+            border-left: 4px solid var(--primary-green);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        body.dark-mode .info-box {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--dark-text-secondary);
+        }
+
+        body.light-mode .info-box {
+            background: #f8f9fa;
+            color: var(--light-text-secondary);
+        }
+
+        .info-box strong {
+            color: var(--primary-green-light);
+        }
+
+        body.light-mode .info-box strong {
+            color: var(--primary-green);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+            justify-content: center;
+        }
+
+        .btn-cadastro {
+            padding: 14px 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-cadastro-submit {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-light) 100%);
+            color: white;
+        }
+
+        .btn-cadastro-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(39, 174, 96, 0.4);
+            color: white;
+        }
+
+        .btn-cadastro-submit:active {
+            transform: translateY(0);
+        }
+
+        body.dark-mode .btn-cadastro-cancel {
+            background: rgba(39, 174, 96, 0.2);
+            color: var(--dark-text);
+            border: 2px solid var(--border-color);
+        }
+
+        body.dark-mode .btn-cadastro-cancel:hover {
+            background: rgba(39, 174, 96, 0.3);
+            border-color: var(--primary-green-light);
+            color: var(--dark-text);
+        }
+
+        body.light-mode .btn-cadastro-cancel {
+            background: #F5F5F5;
+            color: var(--light-text);
+            border: 2px solid #E0E0E0;
+        }
+
+        body.light-mode .btn-cadastro-cancel:hover {
+            background: #E8F8F5;
+            border-color: var(--primary-green);
+            color: var(--light-text);
+        }
+
+        .register-section {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+
+        body.dark-mode .register-section {
+            color: var(--dark-text-secondary);
+        }
+
+        body.light-mode .register-section {
+            color: var(--light-text-secondary);
+        }
+
+        .register-section a {
+            color: var(--primary-green-light);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        body.light-mode .register-section a {
+            color: var(--primary-green);
+        }
+
+        .register-section a:hover {
+            text-decoration: underline;
+        }
+
+        .sensitivity-section {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        body.dark-mode .sensitivity-section {
+            background: rgba(39, 174, 96, 0.1);
+        }
+
+        body.light-mode .sensitivity-section {
+            background: #E8F8F5;
+        }
+
+        .therapy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .cadastro-body {
+                padding: 25px 20px;
+            }
+
+            .cadastro-header {
+                padding: 30px 20px;
+            }
+
+            .section-title h2 {
+                font-size: 1.2rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn-cadastro {
+                width: 100%;
+            }
+        }
+
+        body.dark-mode .cadastro-wrapper {
+            background: rgba(15, 15, 15, 0.95);
+        }
+
+        body.dark-mode .cadastro-body {
+            background: var(--dark-card);
+        }
+
+        body.dark-mode .cadastro-header {
+            background: linear-gradient(135deg, var(--primary-green-dark) 0%, var(--primary-green) 100%);
+            color: white;
+        }
+
+        body.dark-mode .section-title h2,
+        body.dark-mode .form-group label {
+            color: var(--dark-text);
+        }
+
+        body.light-mode .cadastro-wrapper {
+            background: transparent;
+        }
+
+        body.light-mode .cadastro-body {
+            background: var(--light-card);
+            box-shadow: 0 15px 50px rgba(39, 174, 96, 0.2);
+        }
+
+        body.light-mode .section-title h2,
+        body.light-mode .form-group label {
+            color: var(--light-text);
+        }
+
+        .language-selector {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .btn-language-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(39, 174, 96, 0.2);
+            color: var(--primary-green-light);
+            border: 2px solid var(--primary-green);
+            padding: 10px 14px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-language-selector:hover {
+            background: rgba(39, 174, 96, 0.3);
+            border-color: var(--primary-green-light);
+            transform: scale(1.05);
+        }
+
+        .btn-language-selector:active {
+            transform: scale(0.95);
+        }
+
+        .btn-language-selector .lang-code {
+            font-weight: 700;
+            font-size: 14px;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        body.dark-mode .btn-language-selector {
+            background: rgba(39, 174, 96, 0.15);
+            border-color: var(--primary-green-light);
+            color: var(--primary-green-light);
+        }
+
+        body.dark-mode .btn-language-selector:hover {
+            background: rgba(39, 174, 96, 0.25);
+        }
+
+        body.light-mode .btn-language-selector {
+            background: rgba(39, 174, 96, 0.1);
+            border-color: var(--primary-green);
+            color: var(--primary-green);
+        }
+
+        body.light-mode .btn-language-selector:hover {
+            background: rgba(39, 174, 96, 0.2);
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <div class="theme-toggle">
+        <button id="themeBtn" class="btn-theme" title="Alternar tema">
+            <i class="bi bi-moon-fill"></i>
+        </button>
+    </div>
+
+    <div class="language-selector">
+        <button id="langBtn" class="btn-language-selector" title="Alterar idioma">
+            <i class="bi bi-globe"></i>
+            <span class="lang-code">PT</span>
+        </button>
+    </div>
+
+    <div class="cadastro-wrapper">
+        <div class="cadastro-header">
+            <h1 data-i18n="cadastro-criar">Criar Conta</h1>
+            <p data-i18n="cadastro-subtitulo">Sistema Educacional para Crianças com TEA</p>
+        </div>
+
+        <div class="cadastro-body">
+            <form id="cadastroForm" method="POST" action="#" novalidate>
+                
+                <div class="form-section">
+                    <div class="section-title">
+                        <h2 data-i18n="secao-responsavel">Dados do Responsável</h2>
+                    </div>
+
+                    <div class="info-box">
+                        <strong data-i18n="info-obrigatorio">ℹ️ Informação:</strong> <span data-i18n="info-campos">Todos os campos marcados com</span> <span style="color: #e74c3c;">*</span> <span data-i18n="info-sao">são obrigatórios.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nomeResponsavel" class="required" data-i18n="label-nome">Nome Completo</label>
+                        <input type="text" id="nomeResponsavel" name="nomeResponsavel" placeholder="Digite seu nome completo" required minlength="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emailResponsavel" class="required" data-i18n="label-email">E-mail</label>
+                        <input type="email" id="emailResponsavel" name="emailResponsavel" placeholder="seu.email@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefoneResponsavel" class="required" data-i18n="label-telefone">Telefone</label>
+                        <input type="tel" id="telefoneResponsavel" name="telefoneResponsavel" placeholder="(11) 99999-9999" required pattern="[0-9\-\(\)\s]+">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="senhaResponsavel" class="required" data-i18n="label-senha">Senha</label>
+                            <input type="password" id="senhaResponsavel" name="senhaResponsavel" placeholder="Digite uma senha forte" required minlength="8">
+                            <small style="color: var(--primary-green); margin-top: 5px; display: block;" data-i18n="info-minimo">Mínimo 8 caracteres</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmarSenha" class="required" data-i18n="label-confirmar-senha">Confirmar Senha</label>
+                            <input type="password" id="confirmarSenha" name="confirmarSenha" placeholder="Confirme sua senha" required minlength="8">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="grauParentesco" class="required" data-i18n="label-parentesco">Grau de Parentesco</label>
+                        <select id="grauParentesco" name="grauParentesco" required>
+                            <option value="" data-i18n="select-opcao">Selecione uma opção</option>
+                            <option value="pai" data-i18n="op-pai">Pai</option>
+                            <option value="mae" data-i18n="op-mae">Mãe</option>
+                            <option value="responsavel-legal" data-i18n="op-responsavel">Responsável Legal</option>
+                            <option value="terapeuta" data-i18n="op-terapeuta">Terapeuta</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="aceitarTermos" name="aceitarTermos" required>
+                                <label for="aceitarTermos" data-i18n="aceitar-termos">Aceito os Termos de Uso</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="aceitarPrivacidade" name="aceitarPrivacidade" required>
+                                <label for="aceitarPrivacidade" data-i18n="aceitar-privacidade">Aceito a Política de Privacidade</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="maioridade" name="maioridade" required>
+                                <label for="maioridade" data-i18n="confirmar-idade">Confirmo que tenho 18 anos ou mais</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <h2 data-i18n="secao-crianca">Perfil da Criança</h2>
+                    </div>
+
+                    <div class="info-box">
+                        <strong data-i18n="info-personalizacao">ℹ️ Informação:</strong> <span data-i18n="info-dados-ajudam">Essas informações nos ajudam a personalizar a experiência da criança.</span>
+                    </div>
+
+                    <div style="padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 20px; font-weight: 600;" data-i18n="info-basicas">Informações Básicas</h4>
+
+                        <div class="form-group">
+                            <label for="nomeCrianca" class="required" data-i18n="label-nome-crianca">Nome ou Apelido</label>
+                            <input type="text" id="nomeCrianca" name="nomeCrianca" placeholder="Nome ou apelido da criança" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="idadeCrianca" class="required" data-i18n="label-idade">Idade</label>
+                                <input type="number" id="idadeCrianca" name="idadeCrianca" placeholder="Ex: 5" required min="1" max="18">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="dataNascimentoCrianca" class="required" data-i18n="label-data-nascimento">Data de Nascimento</label>
+                                <input type="date" id="dataNascimentoCrianca" name="dataNascimentoCrianca" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="generoCrianca" data-i18n="label-genero">Gênero</label>
+                            <select id="generoCrianca" name="generoCrianca">
+                                <option value="" data-i18n="genero-prefiro">Prefiro não informar</option>
+                                <option value="masculino" data-i18n="genero-masculino">Masculino</option>
+                                <option value="feminino" data-i18n="genero-feminino">Feminino</option>
+                                <option value="outro" data-i18n="genero-outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 20px; font-weight: 600;" data-i18n="comunicacao">🗣️ Comunicação</h4>
+
+                        <div class="form-group">
+                            <label for="falaVerbal" class="required" data-i18n="label-fala">Possui fala verbal?</label>
+                            <select id="falaVerbal" name="falaVerbal" required>
+                                <option value="" data-i18n="select-opcao">Selecione uma opção</option>
+                                <option value="nao-verbal" data-i18n="fala-nao-verbal">Não verbal</option>
+                                <option value="poucas-palavras" data-i18n="fala-poucas">Poucas palavras</option>
+                                <option value="frases-curtas" data-i18n="fala-frases">Frases curtas</option>
+                                <option value="conversacao-basica" data-i18n="fala-conversacao">Conversação básica</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required" data-i18n="label-terapia">Frequenta Terapia?</label>
+                            <div class="therapy-grid">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="terapiaFono" name="terapias" value="fonoaudiologia">
+                                    <label for="terapiaFono" data-i18n="terapia-fono">Fonoaudiologia</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="terapiaPsico" name="terapias" value="psicologia">
+                                    <label for="terapiaPsico" data-i18n="terapia-psico">Psicologia</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="terapiaABA" name="terapias" value="aba">
+                                    <label for="terapiaABA" data-i18n="terapia-aba">ABA</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sensitivity-section">
+                        <h4 style="margin-bottom: 20px; font-weight: 600;" data-i18n="preferencias">🎨 Preferências Sensoriais</h4>
+
+                        <div class="form-group">
+                            <label class="required" data-i18n="label-sensibilidade">Sensível a sons altos?</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="sensibilidadeSomSim" name="sensibilidadeSom" value="sim" required>
+                                    <label for="sensibilidadeSomSim" data-i18n="sim">Sim</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="sensibilidadeSomNao" name="sensibilidadeSom" value="nao" required>
+                                    <label for="sensibilidadeSomNao" data-i18n="nao">Não</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required" data-i18n="label-cores">Prefere cores suaves?</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="coresSuavesSim" name="coresSuaves" value="sim" required>
+                                    <label for="coresSuavesSim" data-i18n="sim">Sim</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="coresSuavesNao" name="coresSuaves" value="nao" required>
+                                    <label for="coresSuavesNao" data-i18n="nao">Não</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required" data-i18n="label-reforco">Gosta de reforço sonoro?</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="reforcoSonSim" name="reforcoSonoro" value="sim" required>
+                                    <label for="reforcoSonSim" data-i18n="sim">Sim</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="reforcoSonNao" name="reforcoSonoro" value="nao" required>
+                                    <label for="reforcoSonNao" data-i18n="nao">Não</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required" data-i18n="label-personagens">Gosta de personagens animados?</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="personagensSim" name="personagensAnimados" value="sim" required>
+                                    <label for="personagensSim" data-i18n="sim">Sim</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="personagensNao" name="personagensAnimados" value="nao" required>
+                                    <label for="personagensNao" data-i18n="nao">Não</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="objetivoPrincipal" class="required" data-i18n="label-objetivo">Objetivo Principal do Uso</label>
+                        <select id="objetivoPrincipal" name="objetivoPrincipal" required>
+                            <option value="" data-i18n="select-objetivo">Selecione o objetivo principal</option>
+                            <option value="estimular-fala" data-i18n="obj-estimular">Estimular fala</option>
+                            <option value="melhorar-socializacao" data-i18n="obj-socializacao">Melhorar socialização</option>
+                            <option value="trabalhar-emocoes" data-i18n="obj-emocoes">Trabalhar emoções</option>
+                            <option value="comunicacao-alternativa" data-i18n="obj-comunicacao">Comunicação alternativa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-cadastro btn-cadastro-submit">
+                        <i class="bi bi-check-circle"></i> <span data-i18n="btn-criar">Criar Conta</span>
+                    </button>
+                    <a href="login.html" class="btn-cadastro btn-cadastro-cancel">
+                        <i class="bi bi-arrow-left"></i> <span data-i18n="btn-voltar">Voltar</span>
+                    </a>
+                </div>
+
+                <div class="register-section">
+                    <span data-i18n="ja-tem-conta">Já tem uma conta?</span> <a href="login.html" data-i18n="fazer-login">Faça login aqui</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const translations = {
+            'pt': {
+                'cadastro-title': 'Cadastro - Sistema Educacional TEA',
+                'cadastro-criar': 'Criar Conta',
+                'cadastro-subtitulo': 'Sistema Educacional para Crianças com TEA',
+                'secao-responsavel': 'Dados do Responsável',
+                'info-obrigatorio': 'ℹ️ Informação:',
+                'info-campos': 'Todos os campos marcados com',
+                'info-sao': 'são obrigatórios.',
+                'label-nome': 'Nome Completo',
+                'label-email': 'E-mail',
+                'label-telefone': 'Telefone',
+                'label-senha': 'Senha',
+                'label-confirmar-senha': 'Confirmar Senha',
+                'info-minimo': 'Mínimo 8 caracteres',
+                'label-parentesco': 'Grau de Parentesco',
+                'select-opcao': 'Selecione uma opção',
+                'op-pai': 'Pai',
+                'op-mae': 'Mãe',
+                'op-responsavel': 'Responsável Legal',
+                'op-terapeuta': 'Terapeuta',
+                'aceitar-termos': 'Aceito os Termos de Uso',
+                'aceitar-privacidade': 'Aceito a Política de Privacidade',
+                'confirmar-idade': 'Confirmo que tenho 18 anos ou mais',
+                'secao-crianca': 'Perfil da Criança',
+                'info-personalizacao': 'ℹ️ Informação:',
+                'info-dados-ajudam': 'Essas informações nos ajudam a personalizar a experiência da criança.',
+                'info-basicas': 'Informações Básicas',
+                'label-nome-crianca': 'Nome ou Apelido',
+                'label-idade': 'Idade',
+                'label-data-nascimento': 'Data de Nascimento',
+                'label-genero': 'Gênero',
+                'genero-prefiro': 'Prefiro não informar',
+                'genero-masculino': 'Masculino',
+                'genero-feminino': 'Feminino',
+                'genero-outro': 'Outro',
+                'comunicacao': 'Comunicação',
+                'label-fala': 'Possui fala verbal?',
+                'fala-nao-verbal': 'Não verbal',
+                'fala-poucas': 'Poucas palavras',
+                'fala-frases': 'Frases curtas',
+                'fala-conversacao': 'Conversação básica',
+                'label-terapia': 'Frequenta Terapia?',
+                'terapia-fono': 'Fonoaudiologia',
+                'terapia-psico': 'Psicologia',
+                'terapia-aba': 'ABA',
+                'preferencias': 'Preferências Sensoriais',
+                'label-sensibilidade': 'Sensível a sons altos?',
+                'label-cores': 'Prefere cores suaves?',
+                'label-reforco': 'Gosta de reforço sonoro?',
+                'label-personagens': 'Gosta de personagens animados?',
+                'sim': 'Sim',
+                'nao': 'Não',
+                'label-objetivo': 'Objetivo Principal do Uso',
+                'select-objetivo': 'Selecione o objetivo principal',
+                'obj-estimular': 'Estimular fala',
+                'obj-socializacao': 'Melhorar socialização',
+                'obj-emocoes': 'Trabalhar emoções',
+                'obj-comunicacao': 'Comunicação alternativa',
+                'btn-criar': 'Criar Conta',
+                'btn-voltar': 'Voltar',
+                'ja-tem-conta': 'Já tem uma conta?',
+                'fazer-login': 'Faça login aqui'
+            },
+            'en': {
+                'cadastro-title': 'Register - TEA Educational System',
+                'cadastro-criar': 'Create Account',
+                'cadastro-subtitulo': 'Educational System for Children with Autism',
+                'secao-responsavel': 'Guardian Information',
+                'info-obrigatorio': 'ℹ️ Information:',
+                'info-campos': 'All fields marked with',
+                'info-sao': 'are required.',
+                'label-nome': 'Full Name',
+                'label-email': 'Email',
+                'label-telefone': 'Phone',
+                'label-senha': 'Password',
+                'label-confirmar-senha': 'Confirm Password',
+                'info-minimo': 'Minimum 8 characters',
+                'label-parentesco': 'Relationship',
+                'select-opcao': 'Select an option',
+                'op-pai': 'Father',
+                'op-mae': 'Mother',
+                'op-responsavel': 'Legal Guardian',
+                'op-terapeuta': 'Therapist',
+                'aceitar-termos': 'I agree to Terms of Use',
+                'aceitar-privacidade': 'I agree to Privacy Policy',
+                'confirmar-idade': 'I confirm I am 18 years or older',
+                'secao-crianca': 'Child Profile',
+                'info-personalizacao': 'ℹ️ Information:',
+                'info-dados-ajudam': 'This information helps personalize the child experience.',
+                'info-basicas': 'Basic Information',
+                'label-nome-crianca': 'Name or Nickname',
+                'label-idade': 'Age',
+                'label-data-nascimento': 'Date of Birth',
+                'label-genero': 'Gender',
+                'genero-prefiro': 'Prefer not to say',
+                'genero-masculino': 'Male',
+                'genero-feminino': 'Female',
+                'genero-outro': 'Other',
+                'comunicacao': 'Communication',
+                'label-fala': 'Does child speak verbally?',
+                'fala-nao-verbal': 'Non-verbal',
+                'fala-poucas': 'Few words',
+                'fala-frases': 'Short sentences',
+                'fala-conversacao': 'Basic conversation',
+                'label-terapia': 'Attends Therapy?',
+                'terapia-fono': 'Speech Therapy',
+                'terapia-psico': 'Psychology',
+                'terapia-aba': 'ABA',
+                'preferencias': 'Sensory Preferences',
+                'label-sensibilidade': 'Sensitive to loud sounds?',
+                'label-cores': 'Prefers soft colors?',
+                'label-reforco': 'Likes sound reinforcement?',
+                'label-personagens': 'Likes animated characters?',
+                'sim': 'Yes',
+                'nao': 'No',
+                'label-objetivo': 'Main Purpose of Use',
+                'select-objetivo': 'Select the main purpose',
+                'obj-estimular': 'Stimulate speech',
+                'obj-socializacao': 'Improve socialization',
+                'obj-emocoes': 'Work on emotions',
+                'obj-comunicacao': 'Alternative communication',
+                'btn-criar': 'Create Account',
+                'btn-voltar': 'Back',
+                'ja-tem-conta': 'Already have an account?',
+                'fazer-login': 'Login here'
+            },
+            'es': {
+                'cadastro-title': 'Registro - Sistema Educativo TEA',
+                'cadastro-criar': 'Crear Cuenta',
+                'cadastro-subtitulo': 'Sistema Educativo para Niños con Autismo',
+                'secao-responsavel': 'Información del Responsable',
+                'info-obrigatorio': 'ℹ️ Información:',
+                'info-campos': 'Todos los campos marcados con',
+                'info-sao': 'son obligatorios.',
+                'label-nome': 'Nombre Completo',
+                'label-email': 'Correo Electrónico',
+                'label-telefone': 'Teléfono',
+                'label-senha': 'Contraseña',
+                'label-confirmar-senha': 'Confirmar Contraseña',
+                'info-minimo': 'Mínimo 8 caracteres',
+                'label-parentesco': 'Relación de Parentesco',
+                'select-opcao': 'Seleccione una opción',
+                'op-pai': 'Padre',
+                'op-mae': 'Madre',
+                'op-responsavel': 'Tutor Legal',
+                'op-terapeuta': 'Terapeuta',
+                'aceitar-termos': 'Acepto los Términos de Uso',
+                'aceitar-privacidade': 'Acepto la Política de Privacidad',
+                'confirmar-idade': 'Confirmo que tengo 18 años o más',
+                'secao-crianca': 'Perfil del Niño',
+                'info-personalizacao': 'ℹ️ Información:',
+                'info-dados-ajudam': 'Esta información personaliza la experiencia del niño.',
+                'info-basicas': 'Información Básica',
+                'label-nome-crianca': 'Nombre o Apodo',
+                'label-idade': 'Edad',
+                'label-data-nascimento': 'Fecha de Nacimiento',
+                'label-genero': 'Género',
+                'genero-prefiro': 'Prefiero no decir',
+                'genero-masculino': 'Masculino',
+                'genero-feminino': 'Femenino',
+                'genero-outro': 'Otro',
+                'comunicacao': 'Comunicación',
+                'label-fala': '¿El niño habla verbalmente?',
+                'fala-nao-verbal': 'No verbal',
+                'fala-poucas': 'Pocas palabras',
+                'fala-frases': 'Frases cortas',
+                'fala-conversacao': 'Conversación básica',
+                'label-terapia': '¿Asiste a Terapia?',
+                'terapia-fono': 'Fonoaudiología',
+                'terapia-psico': 'Psicología',
+                'terapia-aba': 'ABA',
+                'preferencias': 'Preferencias Sensoriales',
+                'label-sensibilidade': '¿Sensible a sonidos fuertes?',
+                'label-cores': '¿Prefiere colores suaves?',
+                'label-reforco': '¿Le gusta refuerzo sonoro?',
+                'label-personagens': '¿Le gustan personajes animados?',
+                'sim': 'Sí',
+                'nao': 'No',
+                'label-objetivo': 'Propósito Principal de Uso',
+                'select-objetivo': 'Seleccione el propósito',
+                'obj-estimular': 'Estimular el habla',
+                'obj-socializacao': 'Mejorar socialización',
+                'obj-emocoes': 'Trabajar emociones',
+                'obj-comunicacao': 'Comunicación alternativa',
+                'btn-criar': 'Crear Cuenta',
+                'btn-voltar': 'Atrás',
+                'ja-tem-conta': '¿Ya tienes cuenta?',
+                'fazer-login': 'Inicia sesión aquí'
+            },
+            'fr': {
+                'cadastro-title': 'Inscription - Système Éducatif TEA',
+                'cadastro-criar': 'Créer un Compte',
+                'cadastro-subtitulo': 'Système Éducatif pour Enfants Autistes',
+                'secao-responsavel': 'Informations du Responsable',
+                'info-obrigatorio': 'ℹ️ Information:',
+                'info-campos': 'Tous les champs marqués avec',
+                'info-sao': 'sont obligatoires.',
+                'label-nome': 'Nom Complet',
+                'label-email': 'E-mail',
+                'label-telefone': 'Téléphone',
+                'label-senha': 'Mot de passe',
+                'label-confirmar-senha': 'Confirmer mot de passe',
+                'info-minimo': 'Minimum 8 caractères',
+                'label-parentesco': 'Lien de Parenté',
+                'select-opcao': 'Sélectionnez une option',
+                'op-pai': 'Père',
+                'op-mae': 'Mère',
+                'op-responsavel': 'Tuteur Légal',
+                'op-terapeuta': 'Thérapeute',
+                'aceitar-termos': 'J\'accepte les Conditions',
+                'aceitar-privacidade': 'J\'accepte la Politique',
+                'confirmar-idade': 'Je confirme avoir 18 ans',
+                'secao-crianca': 'Profil de l\'Enfant',
+                'info-personalizacao': 'ℹ️ Information:',
+                'info-dados-ajudam': 'Cela personnalise l\'expérience.',
+                'info-basicas': 'Informations de Base',
+                'label-nome-crianca': 'Nom ou Surnom',
+                'label-idade': 'Âge',
+                'label-data-nascimento': 'Date de Naissance',
+                'label-genero': 'Genre',
+                'genero-prefiro': 'Je préfère ne pas dire',
+                'genero-masculino': 'Masculin',
+                'genero-feminino': 'Féminin',
+                'genero-outro': 'Autre',
+                'comunicacao': 'Communication',
+                'label-fala': 'L\'enfant parle verbalement?',
+                'fala-nao-verbal': 'Non-verbal',
+                'fala-poucas': 'Quelques mots',
+                'fala-frases': 'Phrases courtes',
+                'fala-conversacao': 'Conversation basique',
+                'label-terapia': 'Suit Thérapie?',
+                'terapia-fono': 'Orthophonie',
+                'terapia-psico': 'Psychologie',
+                'terapia-aba': 'ABA',
+                'preferencias': 'Préférences Sensorielles',
+                'label-sensibilidade': 'Sensible aux bruits?',
+                'label-cores': 'Préfère couleurs douces?',
+                'label-reforco': 'Aime renforcement sonore?',
+                'label-personagens': 'Aime personnages animés?',
+                'sim': 'Oui',
+                'nao': 'Non',
+                'label-objetivo': 'Objectif Principal',
+                'select-objetivo': 'Sélectionnez objectif',
+                'obj-estimular': 'Stimuler la parole',
+                'obj-socializacao': 'Améliorer socialisation',
+                'obj-emocoes': 'Travailler émotions',
+                'obj-comunicacao': 'Communication alternative',
+                'btn-criar': 'Créer Compte',
+                'btn-voltar': 'Retour',
+                'ja-tem-conta': 'Vous avez un compte?',
+                'fazer-login': 'Connectez-vous ici'
+            }
+        };
+
+        function detectLanguage() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const langParam = urlParams.get('lang');
+            if (langParam) return langParam;
+            const savedLang = localStorage.getItem('selectedLanguage');
+            if (savedLang) return savedLang;
+            return 'pt';
+        }
+
+        function applyLanguage(lang) {
+            const trans = translations[lang] || translations['pt'];
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (trans[key]) element.textContent = trans[key];
+            });
+            document.title = trans['cadastro-title'];
+            const langCodeSpan = document.querySelector('.lang-code');
+            if (langCodeSpan) langCodeSpan.textContent = lang.toUpperCase();
+            localStorage.setItem('selectedLanguage', lang);
+            document.documentElement.lang = lang;
+        }
+
+        const currentLang = detectLanguage();
+        applyLanguage(currentLang);
+
+        const themeBtn = document.getElementById('themeBtn');
+        const body = document.body;
+        const savedTheme = localStorage.getItem('theme') || 'dark-mode';
+        body.classList.remove('dark-mode', 'light-mode');
+        body.classList.add(savedTheme);
+        updateThemeIcon();
+
+        themeBtn.addEventListener('click', () => {
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                body.classList.add('light-mode');
+                localStorage.setItem('theme', 'light-mode');
+            } else {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark-mode');
+            }
+            updateThemeIcon();
+        });
+
+        function updateThemeIcon() {
+            const icon = themeBtn.querySelector('i');
+            if (body.classList.contains('dark-mode')) {
+                icon.classList.remove('bi-sun-fill');
+                icon.classList.add('bi-moon-fill');
+            } else {
+                icon.classList.remove('bi-moon-fill');
+                icon.classList.add('bi-sun-fill');
+            }
+        }
+
+        const langBtn = document.getElementById('langBtn');
+        langBtn.addEventListener('click', () => {
+            window.location.href = './index1.html';
+        });
+
+        document.getElementById('confirmarSenha').addEventListener('change', function() {
+            const senha = document.getElementById('senhaResponsavel').value;
+            const confirma = document.getElementById('confirmarSenha').value;
+            if (senha !== confirma) {
+                this.setCustomValidity('As senhas não coincidem!');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        document.getElementById('cadastroForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const senha = document.getElementById('senhaResponsavel').value;
+            const confirma = document.getElementById('confirmarSenha').value;
+            if (senha !== confirma) {
+                alert('As senhas não coincidem!');
+                return;
+            }
+            if (!document.getElementById('aceitarTermos').checked) {
+                alert('Aceite os Termos de Uso!');
+                return;
+            }
+            if (!document.getElementById('aceitarPrivacidade').checked) {
+                alert('Aceite a Política de Privacidade!');
+                return;
+            }
+            if (!document.getElementById('maioridade').checked) {
+                alert('Confirme que tem 18 anos!');
+                return;
+            }
+            alert('Cadastro realizado com sucesso!');
+        });
+
+        document.getElementById('telefoneResponsavel').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                if (value.length <= 2) {
+                    value = `(${value}`;
+                } else if (value.length <= 7) {
+                    value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+                } else {
+                    value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7, 11)}`;
+                }
+            }
+            e.target.value = value;
+        });
+    </script>
+
+</body>
+</html>
