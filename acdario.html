@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Turminha ABC — Recorte e Cole</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+    :root {
+      --primary-green:#27AE60; --primary-green-dark:#1E8449; --primary-green-light:#52BE80;
+      --dark-card:#1A1A1A; --dark-text:#E0E0E0; --light-card:#FFFFFF; --light-text:#212529;
+      --border-color:rgba(39,174,96,.3); --hint-gold:#F0B429;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    body{font-family:'Nunito','Segoe UI',sans-serif;min-height:100vh;
+      transition:background .4s,color .4s;user-select:none;overflow-x:hidden;touch-action:pan-y}
+    body.dark-mode{background:linear-gradient(135deg,#0F0F0F,#1A1A1A);color:var(--dark-text)}
+    body.light-mode{background:linear-gradient(135deg,#E8F8F5,#D5F4E6);color:var(--light-text)}
+
+    /* ── Theme ── */
+    .theme-toggle{position:fixed;top:20px;right:20px;z-index:1000}
+    .btn-theme{width:50px;height:50px;border-radius:50%;border:2px solid var(--primary-green);
+      background:rgba(39,174,96,.1);cursor:pointer;font-size:20px;display:flex;
+      align-items:center;justify-content:center;transition:all .3s;color:var(--primary-green-light)}
+    .btn-theme:hover{transform:scale(1.1);box-shadow:0 5px 15px rgba(39,174,96,.3)}
+
+    /* ── Header ── */
+    .game-header{text-align:center;padding:40px 20px 10px}
+    .game-title{font-size:42px;font-weight:900;letter-spacing:-1px;margin-bottom:6px}
+    .game-title .highlight{color:var(--primary-green-light)}
+    .dark-mode  .game-title{color:var(--dark-text)}
+    .light-mode .game-title{color:var(--primary-green-dark)}
+    .game-subtitle{font-size:15px;opacity:.6;margin-bottom:14px}
+
+    /* Letra badge */
+    .letra-badge{display:inline-flex;align-items:center;justify-content:center;
+      width:64px;height:64px;border-radius:16px;font-size:36px;font-weight:900;
+      background:var(--primary-green);color:#fff;
+      box-shadow:0 4px 16px rgba(39,174,96,.4);margin-bottom:10px;
+      transition:all .4s cubic-bezier(.34,1.56,.64,1)}
+
+    /* ── Score bar ── */
+    .score-bar{display:flex;justify-content:center;align-items:center;gap:30px;margin-bottom:10px}
+    .score-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+    .score-value{font-size:32px;font-weight:900;color:var(--primary-green-light);line-height:1}
+    .score-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.5;font-weight:700}
+    .score-divider{width:2px;height:40px;background:var(--border-color);border-radius:2px}
+
+    /* ── Progress dots ── */
+    .progress-dots{display:flex;justify-content:center;gap:6px;margin:4px 0 16px;flex-wrap:wrap}
+    .dot{width:11px;height:11px;border-radius:50%;transition:all .4s}
+    .dark-mode  .dot{background:rgba(39,174,96,.2);border:2px solid var(--border-color)}
+    .light-mode .dot{background:rgba(39,174,96,.15);border:2px solid rgba(39,174,96,.3)}
+    .dot.filled{background:var(--primary-green-light)!important;border-color:var(--primary-green)!important;transform:scale(1.2)}
+
+    /* ── Instruction bar ── */
+    .instruction-bar{text-align:center;font-size:16px;font-weight:800;
+      padding:12px 24px;border-radius:50px;margin:0 auto 18px;max-width:540px;
+      transition:all .4s;letter-spacing:.3px;display:inline-block}
+    .dark-mode  .instruction-bar{background:rgba(39,174,96,.1);border:1.5px solid var(--border-color);color:var(--primary-green-light)}
+    .light-mode .instruction-bar{background:rgba(39,174,96,.08);border:1.5px solid rgba(39,174,96,.25);color:var(--primary-green-dark)}
+    .instruction-bar.hint-mode{background:rgba(255,200,50,.12)!important;border-color:rgba(255,200,50,.5)!important;
+      color:#E6A817!important;animation:hintBarPulse 1.3s ease infinite}
+    @keyframes hintBarPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,200,50,0)}50%{box-shadow:0 0 0 6px rgba(255,200,50,.12)}}
+    .instruction-bar.success-mode{background:rgba(39,174,96,.15)!important;border-color:var(--primary-green)!important;color:var(--primary-green-light)!important}
+    .instr-wrap{text-align:center}
+
+    /* ── Game container ── */
+    .game-container{max-width:860px;margin:0 auto;padding:0 20px 30px}
+
+    /* Cut line */
+    .cut-line{display:flex;align-items:center;gap:10px;padding:8px 0;margin:8px 0}
+    .cut-scissor{font-size:22px;opacity:.4}
+    .cut-dash{flex:1;height:0;border-top:2px dashed;opacity:.22}
+    .dark-mode  .cut-dash{border-color:var(--dark-text)}
+    .light-mode .cut-dash{border-color:var(--light-text)}
+
+    /* Drop section */
+    .drop-section{display:flex;flex-direction:column;align-items:center;gap:0;margin-bottom:4px}
+    .drop-label{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:2px;
+      padding:10px 24px;border-radius:10px 10px 0 0;color:var(--primary-green-light);
+      width:270px;text-align:center;transition:all .4s}
+    .dark-mode  .drop-label{background:rgba(39,174,96,.08);border:1px solid var(--border-color);border-bottom:none}
+    .light-mode .drop-label{background:rgba(39,174,96,.10);border:1px solid rgba(39,174,96,.2);border-bottom:none}
+
+    .drop-box{width:270px;height:240px;border-radius:0 16px 16px 16px;
+      display:flex;align-items:center;justify-content:center;position:relative;
+      transition:all .3s cubic-bezier(.34,1.56,.64,1);border:2px dashed transparent}
+    .dark-mode  .drop-box{background:rgba(30,30,30,.8);border-color:var(--border-color)}
+    .light-mode .drop-box{background:#FFF;border-color:rgba(0,0,0,.1);box-shadow:0 4px 15px rgba(0,0,0,.06)}
+
+    .drop-box.over{border-color:var(--primary-green-light)!important;border-style:solid!important;
+      background:rgba(39,174,96,.08)!important;
+      box-shadow:0 0 0 3px rgba(39,174,96,.2),0 8px 30px rgba(39,174,96,.2)!important;transform:scale(1.02)}
+    .drop-box.correct{border-color:var(--primary-green)!important;border-style:solid!important;
+      background:rgba(39,174,96,.18)!important;box-shadow:0 8px 30px rgba(39,174,96,.25)!important;
+      pointer-events:none;animation:correctPop .55s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes correctPop{0%{transform:scale(1)}40%{transform:scale(1.08)}70%{transform:scale(.97)}100%{transform:scale(1)}}
+
+    .drop-placeholder{display:flex;flex-direction:column;align-items:center;gap:10px;
+      opacity:.3;pointer-events:none;transition:opacity .3s}
+    .drop-box.correct .drop-placeholder{display:none}
+    .drop-placeholder-icon{font-size:48px}
+    .drop-placeholder-text{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+
+    .match-badge{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;
+      display:none;align-items:center;justify-content:center;font-size:15px;font-weight:900;
+      background:var(--primary-green);color:white;box-shadow:0 2px 8px rgba(39,174,96,.4)}
+    .drop-box.correct .match-badge{display:flex;animation:badgePop .4s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes badgePop{from{transform:scale(0)}to{transform:scale(1)}}
+
+    /* ── Option cards ── */
+    .opcoes-wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:4px}
+
+    .opcao-card{border-radius:16px;padding:18px;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:10px;cursor:grab;position:relative;
+      width:185px;min-height:185px;transition:all .3s cubic-bezier(.34,1.56,.64,1);
+      border:2px solid transparent;animation:cardIn .4s ease-out both;touch-action:none}
+    .opcao-card:active{cursor:grabbing}
+    @keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .dark-mode  .opcao-card{background:rgba(30,30,30,.8);border-color:var(--border-color)}
+    .light-mode .opcao-card{background:#FFF;border-color:rgba(0,0,0,.08);box-shadow:0 4px 15px rgba(0,0,0,.06)}
+    .opcao-card:hover:not(.usada){transform:translateY(-4px) scale(1.02)}
+    .dark-mode  .opcao-card:hover:not(.usada){border-color:var(--primary-green-light);background:rgba(39,174,96,.08);box-shadow:0 8px 25px rgba(39,174,96,.15)}
+    .light-mode .opcao-card:hover:not(.usada){border-color:var(--primary-green);box-shadow:0 8px 25px rgba(39,174,96,.2)}
+    .opcao-card.dragging-active{opacity:.3;transform:scale(.95);border-color:var(--primary-green-light)!important}
+    .opcao-card.usada{opacity:.35;pointer-events:none;filter:grayscale(.6)}
+    .opcao-card.hint-glow{border-color:var(--hint-gold)!important;background:rgba(240,180,41,.1)!important;
+      box-shadow:0 0 0 3px rgba(240,180,41,.22),0 8px 24px rgba(240,180,41,.18)!important;
+      animation:hintCardPulse 1.3s ease infinite!important}
+    @keyframes hintCardPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+
+    .opcao-card svg{width:115px;height:115px;pointer-events:none}
+    .opcao-nome{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;pointer-events:none}
+    .dark-mode  .opcao-nome{color:rgba(224,224,224,.6)}
+    .light-mode .opcao-nome{color:rgba(33,37,41,.5)}
+
+    /* Ghost */
+    #drag-ghost{position:fixed;pointer-events:none;z-index:9999;opacity:.82;
+      transform:translate(-50%,-50%) rotate(5deg) scale(1.08);display:none}
+    #drag-ghost svg{width:100px;height:100px}
+
+    /* ── Buttons ── */
+    .game-actions{display:flex;justify-content:center;gap:12px;margin-top:22px;flex-wrap:wrap}
+    .btn-game{padding:14px 28px;border-radius:50px;border:2px solid var(--primary-green);
+      font-size:15px;font-weight:800;cursor:pointer;transition:all .3s;
+      font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:8px}
+    .btn-primary-game{background:var(--primary-green);color:white}
+    .btn-primary-game:hover{background:var(--primary-green-dark);transform:translateY(-2px);box-shadow:0 8px 20px rgba(39,174,96,.35)}
+    .dark-mode  .btn-secondary-game{background:rgba(39,174,96,.1);color:var(--primary-green-light)}
+    .light-mode .btn-secondary-game{background:rgba(39,174,96,.08);color:var(--primary-green-dark)}
+    .btn-secondary-game:hover{background:rgba(39,174,96,.2);transform:translateY(-2px)}
+
+    /* ── Win overlay ── */
+    .win-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+      display:flex;align-items:center;justify-content:center;z-index:2000;
+      opacity:0;pointer-events:none;transition:opacity .4s}
+    .win-overlay.show{opacity:1;pointer-events:all}
+    .win-modal{border-radius:24px;padding:50px 40px;text-align:center;max-width:420px;width:90%;
+      border:2px solid var(--primary-green);box-shadow:0 20px 60px rgba(39,174,96,.3);
+      transform:scale(.8);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+    .dark-mode  .win-modal{background:var(--dark-card)}
+    .light-mode .win-modal{background:white}
+    .win-overlay.show .win-modal{transform:scale(1)}
+    .win-emoji{font-size:80px;display:block;margin-bottom:16px;animation:winBounce .8s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes winBounce{0%{transform:scale(0) rotate(-10deg)}60%{transform:scale(1.15) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+    .win-title{font-size:34px;font-weight:900;color:var(--primary-green-light);margin-bottom:8px}
+    .win-stats{font-size:16px;opacity:.7;margin-bottom:28px;line-height:1.6}
+    .stars{font-size:40px;margin-bottom:12px;letter-spacing:6px}
+
+    #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:5000}
+
+    /* ── Responsive ── */
+    @media(max-width:560px){
+      .game-title{font-size:28px}
+      .drop-box,.drop-label{width:220px}
+      .drop-box{height:200px}
+      .opcao-card{width:150px;min-height:150px}
+      .opcao-card svg{width:90px;height:90px}
+      .instruction-bar{font-size:13px;padding:10px 16px}
+    }
+  </style>
+</head>
+<body class="dark-mode">
+  <div class="theme-toggle"><button id="themeBtn" class="btn-theme"><i class="bi bi-moon-fill"></i></button></div>
+  <div id="drag-ghost"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Win Modal -->
+  <div class="win-overlay" id="winOverlay">
+    <div class="win-modal">
+      <span class="win-emoji">🏆</span>
+      <div class="stars">⭐⭐⭐</div>
+      <div class="win-title">Incrível!</div>
+      <div class="win-stats" id="winStats"></div>
+      <button class="btn-game btn-primary-game" onclick="nextRound()" style="margin:0 auto 12px;display:flex">
+        <i class="bi bi-arrow-right-circle"></i> Próxima Letra
+      </button>
+      <button class="btn-game btn-secondary-game" onclick="restartAll()" style="margin:0 auto;display:flex">
+        <i class="bi bi-arrow-clockwise"></i> Reiniciar Tudo
+      </button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="game-header">
+    <div class="letra-badge" id="letraBadge">A</div>
+    <h1 class="game-title">Turminha <span class="highlight">ABC</span></h1>
+    <p class="game-subtitle">Pinte, recorte e cole o animal no espaço indicado!</p>
+
+    <div class="score-bar">
+      <div class="score-item">
+        <div class="score-value" id="scoreRodada">0</div>
+        <div class="score-label">Rodada</div>
+      </div>
+      <div class="score-divider"></div>
+      <div class="score-item">
+        <div class="score-value" id="scoreTotal">26</div>
+        <div class="score-label">Total</div>
+      </div>
+    </div>
+
+    <div class="progress-dots" id="progressDots"></div>
+
+    <div class="instr-wrap">
+      <span class="instruction-bar" id="instrucaoBar">✂️ Carregando…</span>
+    </div>
+  </div>
+
+  <!-- Game area -->
+  <div class="game-container">
+    <div class="drop-section">
+      <div class="drop-label" id="dropLabel">🐝 A — Abelha</div>
+      <div class="drop-box" id="dropBox"
+           ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div class="drop-placeholder">
+          <span class="drop-placeholder-icon">📋</span>
+          <span class="drop-placeholder-text">Cole aqui!</span>
+        </div>
+        <div class="match-badge"><i class="bi bi-check2"></i></div>
+      </div>
+    </div>
+
+    <div class="cut-line">
+      <span class="cut-scissor">✂</span><div class="cut-dash"></div><span class="cut-scissor">✂</span>
+    </div>
+
+    <div class="opcoes-wrap" id="opcoesWrap"></div>
+
+    <div class="game-actions">
+      <button class="btn-game btn-primary-game" onclick="nextRound()">
+        <i class="bi bi-shuffle"></i> Sortear Letra
+      </button>
+      <button class="btn-game btn-secondary-game" onclick="requestHint()">
+        <i class="bi bi-lightbulb"></i> Dica
+      </button>
+    </div>
+  </div>
+
+<script>
+// ════════════════════════════════════════════════
+//  AUDIO
+// ════════════════════════════════════════════════
+let audioCtx=null;
+function ensureAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}
+function playTone(f,t,d,v,delay=0){try{ensureAudio();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type=t;o.frequency.setValueAtTime(f,audioCtx.currentTime+delay);g.gain.setValueAtTime(0,audioCtx.currentTime+delay);g.gain.linearRampToValueAtTime(v,audioCtx.currentTime+delay+.01);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+delay+d);o.start(audioCtx.currentTime+delay);o.stop(audioCtx.currentTime+delay+d+.05)}catch(e){}}
+function playSoundCorrect(){playTone(523.25,'sine',.28,.30,.00);playTone(659.25,'sine',.28,.30,.11);playTone(783.99,'sine',.32,.30,.22);playTone(1046.5,'sine',.20,.17,.38)}
+function playSoundWin(){[[523.25,.17,.00],[523.25,.17,.17],[783.99,.38,.34],[698.46,.17,.76],[659.25,.17,.93],[587.33,.17,1.10],[1046.5,.52,1.27]].forEach(([f,d,t])=>playTone(f,'sine',d,.28,t))}
+function playSoundHint(){playTone(392,'sine',.26,.16,.00);playTone(523,'sine',.26,.16,.18)}
+function playSoundSelect(){playTone(660,'sine',.08,.10)}
+
+// ════════════════════════════════════════════════
+//  DADOS COMPLETOS — A a Z
+//  correto: id do card correto, opcoes: [{id,nome,svg}]
+// ════════════════════════════════════════════════
+const ALFABETO = [
+  {
+    letra:'A', nome:'Abelha', emoji:'🐝',
+    correto:'abelha',
+    opcoes:[
+      { id:'abelha', nome:'Abelha', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="74" rx="25" ry="32" fill="#FFD600" stroke="#1A1A1A" stroke-width="3"/>
+        <rect x="35" y="65" width="50" height="9" rx="3" fill="#1A1A1A" opacity=".78"/>
+        <rect x="35" y="81" width="50" height="9" rx="3" fill="#1A1A1A" opacity=".78"/>
+        <circle cx="60" cy="37" r="20" fill="#FFD600" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="52" cy="34" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="68" cy="34" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="53" cy="35" r="3" fill="#1A1A1A"/><circle cx="69" cy="35" r="3" fill="#1A1A1A"/>
+        <circle cx="54" cy="34" r="1.2" fill="#fff"/><circle cx="70" cy="34" r="1.2" fill="#fff"/>
+        <path d="M52 44 Q60 52 68 44" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <line x1="52" y1="18" x2="44" y2="8" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="43" cy="7" r="3.5" fill="#1A1A1A"/>
+        <line x1="68" y1="18" x2="76" y2="8" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="77" cy="7" r="3.5" fill="#1A1A1A"/>
+        <ellipse cx="30" cy="55" rx="18" ry="10" fill="#B3E5FC" stroke="#1A1A1A" stroke-width="2.5" opacity=".85"/>
+        <ellipse cx="90" cy="55" rx="18" ry="10" fill="#B3E5FC" stroke="#1A1A1A" stroke-width="2.5" opacity=".85"/>
+        <polygon points="60,106 55,100 65,100" fill="#1A1A1A"/>
+      </svg>` },
+      { id:'borboleta', nome:'Borboleta', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="36" cy="44" rx="27" ry="19" fill="#F48FB1" stroke="#1A1A1A" stroke-width="3" transform="rotate(-25,36,44)"/>
+        <ellipse cx="84" cy="44" rx="27" ry="19" fill="#F48FB1" stroke="#1A1A1A" stroke-width="3" transform="rotate(25,84,44)"/>
+        <ellipse cx="40" cy="75" rx="19" ry="15" fill="#F8BBD0" stroke="#1A1A1A" stroke-width="3" transform="rotate(15,40,75)"/>
+        <ellipse cx="80" cy="75" rx="19" ry="15" fill="#F8BBD0" stroke="#1A1A1A" stroke-width="3" transform="rotate(-15,80,75)"/>
+        <ellipse cx="60" cy="62" rx="7" ry="24" fill="#1A1A1A"/>
+        <circle cx="60" cy="32" r="13" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="55" cy="30" r="4" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="65" cy="30" r="4" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="56" cy="31" r="2" fill="#1A1A1A"/><circle cx="66" cy="31" r="2" fill="#1A1A1A"/>
+        <path d="M55 37 Q60 43 65 37" stroke="#1A1A1A" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <line x1="57" y1="20" x2="51" y2="12" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="50" cy="11" r="3" fill="#E91E63"/>
+        <line x1="63" y1="20" x2="69" y2="12" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="70" cy="11" r="3" fill="#E91E63"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'B', nome:'Baleia', emoji:'🐋',
+    correto:'baleia',
+    opcoes:[
+      { id:'baleia', nome:'Baleia', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="58" cy="70" rx="45" ry="28" fill="#90CAF9" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M103 65 Q115 55 112 75 Q108 85 100 78 Z" fill="#90CAF9" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="40" cy="62" r="8" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="42" cy="62" r="4" fill="#1A1A1A"/>
+        <circle cx="43" cy="61" r="1.5" fill="#fff"/>
+        <path d="M35 75 Q42 82 50 75" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M55 42 Q60 30 65 42" stroke="#90CAF9" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <path d="M55 42 Q60 30 65 42" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <circle cx="44" cy="58" r="2" fill="#1A1A1A" opacity=".4"/>
+        <circle cx="50" cy="65" r="2.5" fill="#1A1A1A" opacity=".3"/>
+        <circle cx="38" cy="70" r="1.8" fill="#1A1A1A" opacity=".35"/>
+        <path d="M18 88 Q30 78 45 88" fill="#64B5F6" stroke="#1A1A1A" stroke-width="2"/>
+      </svg>` },
+      { id:'peixe', nome:'Peixe', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="55" cy="65" rx="35" ry="22" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <polygon points="90,65 108,50 108,80" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="36" cy="60" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="37" cy="60" r="3" fill="#1A1A1A"/>
+        <circle cx="38" cy="59" r="1.2" fill="#fff"/>
+        <line x1="55" y1="45" x2="55" y2="85" stroke="#1A1A1A" stroke-width="1.5" opacity=".4"/>
+        <line x1="67" y1="46" x2="67" y2="84" stroke="#1A1A1A" stroke-width="1.5" opacity=".4"/>
+        <line x1="43" y1="46" x2="43" y2="84" stroke="#1A1A1A" stroke-width="1.5" opacity=".4"/>
+        <path d="M30 53 Q50 43 70 53" stroke="#1A1A1A" stroke-width="2" fill="none"/>
+        <path d="M32 57 Q52 47 72 57" stroke="#1A1A1A" stroke-width="1.5" fill="none" opacity=".5"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'C', nome:'Cachorro', emoji:'🐕',
+    correto:'cachorro',
+    opcoes:[
+      { id:'cachorro', nome:'Cachorro', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="62" cy="80" rx="30" ry="22" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="62" cy="50" r="24" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <ellipse cx="42" cy="35" rx="10" ry="16" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5" transform="rotate(-15,42,35)"/>
+        <ellipse cx="82" cy="35" rx="10" ry="16" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5" transform="rotate(15,82,35)"/>
+        <circle cx="54" cy="47" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="70" cy="47" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="55" cy="48" r="3" fill="#1A1A1A"/><circle cx="71" cy="48" r="3" fill="#1A1A1A"/>
+        <circle cx="56" cy="47" r="1.2" fill="#fff"/><circle cx="72" cy="47" r="1.2" fill="#fff"/>
+        <ellipse cx="62" cy="57" rx="8" ry="6" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M54 63 Q62 70 70 63" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <line x1="44" y1="58" x2="28" y2="54" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="44" y1="62" x2="28" y2="62" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="44" y1="66" x2="28" y2="70" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="45" y1="95" x2="38" y2="110" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="60" y1="100" x2="55" y2="110" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="75" y1="100" x2="72" y2="110" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <path d="M85 88 Q98 80 100 92" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+      </svg>` },
+      { id:'tartaruga2', nome:'Tartaruga', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="68" rx="34" ry="26" fill="#66BB6A" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M35 68 Q60 45 85 68 Q60 91 35 68Z" fill="#A5D6A7" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="60" y1="45" x2="60" y2="91" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <line x1="36" y1="68" x2="84" y2="68" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <circle cx="60" cy="40" r="12" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="56" cy="38" r="3" fill="#1A1A1A"/><circle cx="64" cy="38" r="3" fill="#1A1A1A"/>
+        <path d="M55 44 Q60 48 65 44" stroke="#1A1A1A" stroke-width="2" fill="none"/>
+        <line x1="32" y1="58" x2="18" y2="52" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="32" y1="78" x2="18" y2="84" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="88" y1="58" x2="102" y2="52" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="88" y1="78" x2="102" y2="84" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="60" y1="94" x2="60" y2="108" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'D', nome:'Dinossauro', emoji:'🦕',
+    correto:'dino',
+    opcoes:[
+      { id:'dino', nome:'Dinossauro', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="55" cy="78" rx="30" ry="24" fill="#81C784" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="55" cy="46" r="22" fill="#81C784" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M44 26 Q47 16 50 26" fill="#A5D6A7" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M55 24 Q58 14 61 24" fill="#A5D6A7" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M66 26 Q69 17 72 26" fill="#A5D6A7" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="47" cy="41" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="63" cy="41" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="48" cy="42" r="3" fill="#1A1A1A"/><circle cx="64" cy="42" r="3" fill="#1A1A1A"/>
+        <circle cx="49" cy="41" r="1.2" fill="#fff"/><circle cx="65" cy="41" r="1.2" fill="#fff"/>
+        <path d="M47 53 Q55 60 63 53" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M73 55 Q84 48 88 60 Q84 68 76 64 Z" fill="#81C784" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="42" y1="100" x2="36" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="58" y1="102" x2="55" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="72" y1="100" x2="70" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` },
+      { id:'tricera', nome:'Triceratops', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="78" rx="38" ry="24" fill="#A5D6A7" stroke="#1A1A1A" stroke-width="3"/>
+        <ellipse cx="38" cy="54" rx="26" ry="20" fill="#A5D6A7" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M20 40 L14 22 L26 36 Z" fill="#C8E6C9" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M34 28 L30 10 L42 26 Z" fill="#C8E6C9" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M48 30 L48 14 L58 28 Z" fill="#C8E6C9" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="30" cy="52" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="31" cy="52" r="3" fill="#1A1A1A"/>
+        <path d="M24 62 Q34 70 44 62" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <line x1="28" y1="98" x2="22" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="48" y1="102" x2="46" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="72" y1="102" x2="70" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="92" y1="98" x2="92" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M86 78 Q100 70 104 84 Q100 94 92 90 Z" fill="#A5D6A7" stroke="#1A1A1A" stroke-width="2"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'E', nome:'Elefante', emoji:'🐘',
+    correto:'elefante',
+    opcoes:[
+      { id:'elefante', nome:'Elefante', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="62" cy="78" rx="34" ry="26" fill="#B0BEC5" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="62" cy="46" r="24" fill="#B0BEC5" stroke="#1A1A1A" stroke-width="3"/>
+        <ellipse cx="34" cy="38" rx="12" ry="20" fill="#90A4AE" stroke="#1A1A1A" stroke-width="2.5" transform="rotate(-20,34,38)"/>
+        <ellipse cx="90" cy="38" rx="12" ry="20" fill="#90A4AE" stroke="#1A1A1A" stroke-width="2.5" transform="rotate(20,90,38)"/>
+        <path d="M50 60 Q44 72 46 84 Q50 90 52 84 Q54 78 50 72" fill="#B0BEC5" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="54" cy="42" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="70" cy="42" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="55" cy="43" r="3" fill="#1A1A1A"/><circle cx="71" cy="43" r="3" fill="#1A1A1A"/>
+        <circle cx="56" cy="42" r="1.2" fill="#fff"/><circle cx="72" cy="42" r="1.2" fill="#fff"/>
+        <line x1="40" y1="100" x2="33" y2="114" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round"/>
+        <line x1="58" y1="103" x2="55" y2="114" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round"/>
+        <line x1="72" y1="103" x2="72" y2="114" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round"/>
+        <line x1="88" y1="100" x2="88" y2="114" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round"/>
+      </svg>` },
+      { id:'panda', nome:'Panda', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="64" r="32" fill="#fff" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="38" cy="46" r="14" fill="#1A1A1A"/>
+        <circle cx="82" cy="46" r="14" fill="#1A1A1A"/>
+        <circle cx="38" cy="44" r="7" fill="#fff"/>
+        <circle cx="82" cy="44" r="7" fill="#fff"/>
+        <circle cx="39" cy="44" r="4" fill="#1A1A1A"/><circle cx="83" cy="44" r="4" fill="#1A1A1A"/>
+        <circle cx="40" cy="43" r="1.5" fill="#fff"/><circle cx="84" cy="43" r="1.5" fill="#fff"/>
+        <ellipse cx="60" cy="72" rx="12" ry="9" fill="#ffcdd2" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M52 78 Q60 86 68 78" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <circle cx="36" cy="28" r="11" fill="#1A1A1A"/>
+        <circle cx="84" cy="28" r="11" fill="#1A1A1A"/>
+        <circle cx="60" cy="96" r="8" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'F', nome:'Formiga', emoji:'🐜',
+    correto:'formiga',
+    opcoes:[
+      { id:'formiga', nome:'Formiga', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="78" cy="38" r="14" fill="#1A1A1A" stroke="#424242" stroke-width="1.5"/>
+        <circle cx="68" cy="62" r="12" fill="#1A1A1A" stroke="#424242" stroke-width="1.5"/>
+        <ellipse cx="52" cy="82" rx="20" ry="15" fill="#1A1A1A" stroke="#424242" stroke-width="1.5"/>
+        <circle cx="73" cy="34" r="5" fill="#fff"/><circle cx="74" cy="34" r="3" fill="#1A1A1A"/>
+        <circle cx="83" cy="34" r="5" fill="#fff"/><circle cx="84" cy="34" r="3" fill="#1A1A1A"/>
+        <path d="M74 44 Q70 54 66 52" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="80" y1="28" x2="86" y2="16" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="87" cy="15" r="3" fill="#1A1A1A"/>
+        <line x1="74" y1="26" x2="70" y2="14" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="70" cy="13" r="3" fill="#1A1A1A"/>
+        <line x1="76" y1="54" x2="92" y2="46" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <line x1="76" y1="60" x2="94" y2="58" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <line x1="76" y1="66" x2="92" y2="72" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <line x1="60" y1="54" x2="44" y2="46" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <line x1="60" y1="60" x2="42" y2="60" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <line x1="60" y1="66" x2="44" y2="72" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+      </svg>` },
+      { id:'caracol', nome:'Caracol', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="82" rx="28" ry="14" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M72 76 Q90 60 82 42 Q74 24 58 28 Q42 32 40 48 Q38 64 52 70 Q66 76 74 66 Q82 56 76 48 Q70 40 62 44 Q54 48 56 56 Q58 62 64 60 Q70 58 68 54" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="40" cy="70" r="8" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="36" cy="67" r="3" fill="#fff" stroke="#1A1A1A" stroke-width="1.5"/>
+        <circle cx="37" cy="67" r="1.5" fill="#1A1A1A"/>
+        <line x1="32" y1="62" x2="26" y2="52" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="26" cy="51" r="3" fill="#1A1A1A"/>
+        <path d="M30 78 Q20 88 22 96" stroke="#FFCC80" stroke-width="5" fill="none"/>
+        <path d="M30 78 Q20 88 22 96" stroke="#1A1A1A" stroke-width="2" fill="none"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'G', nome:'Girafa', emoji:'🦒',
+    correto:'girafa',
+    opcoes:[
+      { id:'girafa', nome:'Girafa', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="68" cy="90" rx="22" ry="16" fill="#FFD54F" stroke="#1A1A1A" stroke-width="3"/>
+        <rect x="56" y="40" width="16" height="52" rx="8" fill="#FFD54F" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="64" cy="30" r="18" fill="#FFD54F" stroke="#1A1A1A" stroke-width="3"/>
+        <line x1="58" y1="14" x2="55" y2="6" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="54" cy="5" r="3" fill="#FF8A65"/>
+        <line x1="70" y1="14" x2="73" y2="6" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="74" cy="5" r="3" fill="#FF8A65"/>
+        <circle cx="57" cy="27" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="71" cy="27" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="58" cy="28" r="3" fill="#1A1A1A"/><circle cx="72" cy="28" r="3" fill="#1A1A1A"/>
+        <circle cx="59" cy="27" r="1.2" fill="#fff"/><circle cx="73" cy="27" r="1.2" fill="#fff"/>
+        <path d="M57 38 Q64 44 71 38" stroke="#1A1A1A" stroke-width="2" fill="none"/>
+        <ellipse cx="58" cy="62" rx="5" ry="8" fill="#FF8A65" opacity=".5"/>
+        <ellipse cx="70" cy="70" rx="5" ry="8" fill="#FF8A65" opacity=".5"/>
+        <ellipse cx="62" cy="80" rx="4" ry="6" fill="#FF8A65" opacity=".5"/>
+        <line x1="52" y1="104" x2="48" y2="116" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="64" y1="106" x2="62" y2="116" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="76" y1="106" x2="76" y2="116" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="86" y1="104" x2="88" y2="116" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` },
+      { id:'ema', nome:'Ema', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="72" rx="22" ry="28" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="3"/>
+        <rect x="52" y="30" width="10" height="44" rx="5" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="57" cy="24" r="14" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="52" cy="21" r="5" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="53" cy="21" r="2.5" fill="#1A1A1A"/>
+        <path d="M50 29 Q57 34 64 29" stroke="#1A1A1A" stroke-width="2" fill="none"/>
+        <path d="M60 62 Q80 55 85 68 Q80 78 68 72 Z" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M60 70 Q76 64 80 74" fill="#A1887F" stroke="#1A1A1A" stroke-width="1.5"/>
+        <line x1="48" y1="98" x2="44" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="60" y1="100" x2="58" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="72" y1="98" x2="72" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'H', nome:'Hipopótamo', emoji:'🦛',
+    correto:'hippo',
+    opcoes:[
+      { id:'hippo', nome:'Hipopótamo', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="78" rx="40" ry="28" fill="#CE93D8" stroke="#1A1A1A" stroke-width="3"/>
+        <ellipse cx="60" cy="56" rx="32" ry="26" fill="#CE93D8" stroke="#1A1A1A" stroke-width="3"/>
+        <ellipse cx="40" cy="42" rx="12" ry="16" fill="#CE93D8" stroke="#1A1A1A" stroke-width="2.5"/>
+        <ellipse cx="80" cy="42" rx="12" ry="16" fill="#CE93D8" stroke="#1A1A1A" stroke-width="2.5"/>
+        <ellipse cx="60" cy="70" rx="24" ry="14" fill="#BA68C8" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="48" cy="52" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="72" cy="52" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="49" cy="53" r="3.5" fill="#1A1A1A"/><circle cx="73" cy="53" r="3.5" fill="#1A1A1A"/>
+        <circle cx="50" cy="52" r="1.5" fill="#fff"/><circle cx="74" cy="52" r="1.5" fill="#fff"/>
+        <ellipse cx="60" cy="68" rx="14" ry="8" fill="#E1BEE7" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="55" cy="67" r="2.5" fill="#1A1A1A"/><circle cx="65" cy="67" r="2.5" fill="#1A1A1A"/>
+        <line x1="30" y1="102" x2="24" y2="114" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round"/>
+        <line x1="50" y1="106" x2="47" y2="114" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round"/>
+        <line x1="70" y1="106" x2="70" y2="114" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round"/>
+        <line x1="90" y1="102" x2="92" y2="114" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round"/>
+      </svg>` },
+      { id:'ema2', nome:'Ema', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="72" rx="22" ry="28" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="3"/>
+        <rect x="52" y="30" width="10" height="44" rx="5" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="57" cy="24" r="14" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="52" cy="21" r="5" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="53" cy="21" r="2.5" fill="#1A1A1A"/>
+        <path d="M60 62 Q80 55 85 68 Q80 78 68 72 Z" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="48" y1="98" x2="44" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="60" y1="100" x2="58" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="72" y1="98" x2="72" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'I', nome:'Iguana', emoji:'🦎',
+    correto:'iguana',
+    opcoes:[
+      { id:'iguana', nome:'Iguana', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="58" cy="72" rx="36" ry="20" fill="#66BB6A" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="40" cy="52" r="18" fill="#66BB6A" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M55 65 Q80 55 100 70 Q90 80 70 75 Z" fill="#66BB6A" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M36 34 L34 22 L40 33" fill="#81C784" stroke="#1A1A1A" stroke-width="1.5"/>
+        <path d="M44 32 L44 20 L50 32" fill="#81C784" stroke="#1A1A1A" stroke-width="1.5"/>
+        <circle cx="33" cy="49" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="34" cy="49" r="3" fill="#1A1A1A"/>
+        <circle cx="35" cy="48" r="1.2" fill="#fff"/>
+        <line x1="28" y1="46" x2="18" y2="40" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <line x1="28" y1="52" x2="16" y2="54" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <line x1="40" y1="88" x2="36" y2="102" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="54" y1="92" x2="52" y2="104" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="68" y1="90" x2="68" y2="104" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="80" y1="86" x2="82" y2="100" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="93" y1="76" x2="108" y2="84" stroke="#66BB6A" stroke-width="6" stroke-linecap="round"/>
+        <line x1="93" y1="76" x2="108" y2="84" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+      </svg>` },
+      { id:'ema3', nome:'Ema', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="72" rx="22" ry="28" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="3"/>
+        <rect x="52" y="30" width="10" height="44" rx="5" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="57" cy="24" r="14" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="52" cy="21" r="5" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="53" cy="21" r="2.5" fill="#1A1A1A"/>
+        <path d="M60 62 Q80 55 85 68 Q80 78 68 72 Z" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="48" y1="98" x2="44" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="60" y1="100" x2="58" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="72" y1="98" x2="72" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'J', nome:'Joaninha', emoji:'🐞',
+    correto:'joaninha',
+    opcoes:[
+      { id:'joaninha', nome:'Joaninha', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="74" rx="34" ry="28" fill="#EF5350" stroke="#1A1A1A" stroke-width="3"/>
+        <line x1="60" y1="48" x2="60" y2="102" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="44" cy="68" r="7" fill="#1A1A1A"/>
+        <circle cx="76" cy="68" r="7" fill="#1A1A1A"/>
+        <circle cx="44" cy="84" r="6" fill="#1A1A1A"/>
+        <circle cx="76" cy="84" r="6" fill="#1A1A1A"/>
+        <circle cx="58" cy="56" r="5" fill="#1A1A1A"/>
+        <circle cx="60" cy="46" r="18" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="52" cy="42" r="6" fill="#fff"/><circle cx="53" cy="42" r="3.5" fill="#1A1A1A"/>
+        <circle cx="68" cy="42" r="6" fill="#fff"/><circle cx="69" cy="42" r="3.5" fill="#1A1A1A"/>
+        <line x1="54" y1="28" x2="50" y2="18" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="50" cy="17" r="3.5" fill="#1A1A1A"/>
+        <line x1="66" y1="28" x2="70" y2="18" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="70" cy="17" r="3.5" fill="#1A1A1A"/>
+      </svg>` },
+      { id:'lagarta', nome:'Lagarta', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="70" r="14" fill="#66BB6A" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="46" cy="68" r="14" fill="#81C784" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="68" cy="70" r="14" fill="#66BB6A" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="88" cy="68" r="13" fill="#81C784" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="104" cy="56" r="16" fill="#66BB6A" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="96" cy="46" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="97" cy="46" r="3" fill="#1A1A1A"/>
+        <circle cx="108" cy="46" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="109" cy="46" r="3" fill="#1A1A1A"/>
+        <path d="M98 58 Q104 64 110 58" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <line x1="100" y1="40" x2="96" y2="28" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="96" cy="27" r="3" fill="#1A1A1A"/>
+        <line x1="108" y1="40" x2="112" y2="28" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="112" cy="27" r="3" fill="#1A1A1A"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'K', nome:'Koala', emoji:'🐨',
+    correto:'koala',
+    opcoes:[
+      { id:'koala', nome:'Koala', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="68" r="32" fill="#B0BEC5" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="32" cy="42" r="18" fill="#90A4AE" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="88" cy="42" r="18" fill="#90A4AE" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="32" cy="42" r="10" fill="#78909C" stroke="#1A1A1A" stroke-width="1.5"/>
+        <circle cx="88" cy="42" r="10" fill="#78909C" stroke="#1A1A1A" stroke-width="1.5"/>
+        <circle cx="50" cy="62" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="70" cy="62" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="51" cy="63" r="3.5" fill="#1A1A1A"/><circle cx="71" cy="63" r="3.5" fill="#1A1A1A"/>
+        <circle cx="52" cy="62" r="1.5" fill="#fff"/><circle cx="72" cy="62" r="1.5" fill="#fff"/>
+        <ellipse cx="60" cy="74" rx="12" ry="8" fill="#78909C" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="55" cy="73" r="2.5" fill="#1A1A1A"/><circle cx="65" cy="73" r="2.5" fill="#1A1A1A"/>
+        <path d="M50 80 Q60 88 70 80" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <ellipse cx="60" cy="90" rx="16" ry="8" fill="#CFD8DC" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M40 66 Q30 78 34 90 Q38 96 44 90" fill="#B0BEC5" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M80 66 Q90 78 86 90 Q82 96 76 90" fill="#B0BEC5" stroke="#1A1A1A" stroke-width="2"/>
+      </svg>` },
+      { id:'joaninha2', nome:'Joaninha', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="74" rx="34" ry="28" fill="#EF5350" stroke="#1A1A1A" stroke-width="3"/>
+        <line x1="60" y1="48" x2="60" y2="102" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="44" cy="68" r="7" fill="#1A1A1A"/>
+        <circle cx="76" cy="68" r="7" fill="#1A1A1A"/>
+        <circle cx="60" cy="46" r="18" fill="#1A1A1A"/>
+        <circle cx="52" cy="42" r="6" fill="#fff"/><circle cx="68" cy="42" r="6" fill="#fff"/>
+        <circle cx="53" cy="42" r="3" fill="#1A1A1A"/><circle cx="69" cy="42" r="3" fill="#1A1A1A"/>
+        <line x1="54" y1="28" x2="50" y2="18" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="50" cy="17" r="3" fill="#1A1A1A"/>
+        <line x1="66" y1="28" x2="70" y2="18" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="70" cy="17" r="3" fill="#1A1A1A"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'L', nome:'Leão', emoji:'🦁',
+    correto:'leao',
+    opcoes:[
+      { id:'leao', nome:'Leão', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="36" fill="#FFA726" stroke="#E65100" stroke-width="4" opacity=".7"/>
+        <circle cx="60" cy="60" r="26" fill="#FFD54F" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="36" cy="32" r="10" fill="#FFD54F" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="84" cy="32" r="10" fill="#FFD54F" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="50" cy="55" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="70" cy="55" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="51" cy="56" r="3.5" fill="#1A1A1A"/><circle cx="71" cy="56" r="3.5" fill="#1A1A1A"/>
+        <circle cx="52" cy="55" r="1.5" fill="#fff"/><circle cx="72" cy="55" r="1.5" fill="#fff"/>
+        <ellipse cx="60" cy="68" rx="12" ry="8" fill="#FFB74D" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="55" cy="67" r="2.5" fill="#1A1A1A"/><circle cx="65" cy="67" r="2.5" fill="#1A1A1A"/>
+        <path d="M50 74 Q60 82 70 74" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <line x1="40" y1="68" x2="26" y2="64" stroke="#1A1A1A" stroke-width="1.5"/>
+        <line x1="40" y1="72" x2="26" y2="72" stroke="#1A1A1A" stroke-width="1.5"/>
+        <line x1="40" y1="76" x2="26" y2="80" stroke="#1A1A1A" stroke-width="1.5"/>
+        <ellipse cx="60" cy="94" rx="18" ry="12" fill="#FFD54F" stroke="#1A1A1A" stroke-width="2.5"/>
+        <line x1="44" y1="104" x2="40" y2="116" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="60" y1="106" x2="58" y2="116" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="76" y1="104" x2="76" y2="116" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` },
+      { id:'veado2', nome:'Veado', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="82" rx="28" ry="22" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="60" cy="46" r="20" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M48 28 Q44 18 38 14 Q42 24 40 30" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M72 28 Q76 18 82 14 Q78 24 80 30" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="52" cy="43" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="68" cy="43" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="53" cy="44" r="3" fill="#1A1A1A"/><circle cx="69" cy="44" r="3" fill="#1A1A1A"/>
+        <path d="M53 54 Q60 60 67 54" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <line x1="42" y1="100" x2="38" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="56" y1="103" x2="54" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="70" y1="103" x2="70" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="80" y1="100" x2="82" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'M', nome:'Minhoca', emoji:'🪱',
+    correto:'minhoca',
+    opcoes:[
+      { id:'minhoca', nome:'Minhoca', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <path d="M60 100 Q40 90 38 74 Q36 58 52 56 Q68 54 68 70 Q68 84 54 84 Q42 84 42 74" fill="none" stroke="#FF8A65" stroke-width="14" stroke-linecap="round"/>
+        <path d="M60 100 Q40 90 38 74 Q36 58 52 56 Q68 54 68 70 Q68 84 54 84 Q42 84 42 74" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="60" cy="100" r="12" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="55" cy="97" r="4" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="56" cy="97" r="2" fill="#1A1A1A"/>
+        <circle cx="65" cy="97" r="4" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="66" cy="97" r="2" fill="#1A1A1A"/>
+        <path d="M54 103 Q60 108 66 103" stroke="#1A1A1A" stroke-width="2" fill="none"/>
+      </svg>` },
+      { id:'estrela', nome:'Estrela-do-Mar', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <path d="M60 12 L68 44 L100 44 L74 64 L84 96 L60 76 L36 96 L46 64 L20 44 L52 44 Z" fill="#FF8A65" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="60" cy="60" r="14" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="52" cy="56" r="5" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="53" cy="56" r="2.5" fill="#1A1A1A"/>
+        <circle cx="66" cy="56" r="5" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="67" cy="56" r="2.5" fill="#1A1A1A"/>
+        <path d="M52 64 Q60 70 68 64" stroke="#1A1A1A" stroke-width="2" fill="none"/>
+        <circle cx="48" cy="36" r="3" fill="#1A1A1A" opacity=".4"/>
+        <circle cx="72" cy="36" r="3" fill="#1A1A1A" opacity=".4"/>
+        <circle cx="38" cy="58" r="2.5" fill="#1A1A1A" opacity=".4"/>
+        <circle cx="82" cy="58" r="2.5" fill="#1A1A1A" opacity=".4"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'N', nome:'Naja', emoji:'🐍',
+    correto:'naja',
+    opcoes:[
+      { id:'naja', nome:'Naja', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <path d="M60 110 Q30 100 22 80 Q14 60 28 50 Q42 40 50 55 Q58 70 44 76 Q32 80 32 68" fill="none" stroke="#66BB6A" stroke-width="14" stroke-linecap="round"/>
+        <path d="M60 110 Q30 100 22 80 Q14 60 28 50 Q42 40 50 55 Q58 70 44 76 Q32 80 32 68" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="68" cy="36" rx="24" ry="18" fill="#66BB6A" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="58" cy="32" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="78" cy="32" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="59" cy="33" r="3" fill="#1A1A1A"/><circle cx="79" cy="33" r="3" fill="#1A1A1A"/>
+        <circle cx="60" cy="32" r="1.2" fill="#fff"/><circle cx="80" cy="32" r="1.2" fill="#fff"/>
+        <path d="M60 110 L55 108 M60 110 L65 108" stroke="#FF1744" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="60" y1="54" x2="72" y2="80" stroke="#1A1A1A" stroke-width="2" opacity=".5"/>
+      </svg>` },
+      { id:'joaninha3', nome:'Joaninha', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="74" rx="34" ry="28" fill="#EF5350" stroke="#1A1A1A" stroke-width="3"/>
+        <line x1="60" y1="48" x2="60" y2="102" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="44" cy="68" r="7" fill="#1A1A1A"/>
+        <circle cx="76" cy="68" r="7" fill="#1A1A1A"/>
+        <circle cx="44" cy="84" r="6" fill="#1A1A1A"/>
+        <circle cx="76" cy="84" r="6" fill="#1A1A1A"/>
+        <circle cx="60" cy="46" r="18" fill="#1A1A1A"/>
+        <circle cx="52" cy="42" r="6" fill="#fff"/><circle cx="68" cy="42" r="6" fill="#fff"/>
+        <circle cx="53" cy="42" r="3" fill="#1A1A1A"/><circle cx="69" cy="42" r="3" fill="#1A1A1A"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'O', nome:'Ovelha', emoji:'🐑',
+    correto:'ovelha',
+    opcoes:[
+      { id:'ovelha', nome:'Ovelha', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="42" cy="58" r="18" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="62" cy="52" r="20" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="78" cy="62" r="16" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="56" cy="72" r="18" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="2.5"/>
+        <ellipse cx="60" cy="78" rx="26" ry="16" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="44" cy="46" r="14" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="40" cy="43" r="5" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="41" cy="43" r="2.5" fill="#1A1A1A"/>
+        <circle cx="50" cy="43" r="5" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="51" cy="43" r="2.5" fill="#1A1A1A"/>
+        <path d="M40 52 Q46 57 52 52" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <line x1="36" y1="92" x2="32" y2="108" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="50" y1="95" x2="48" y2="108" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="66" y1="95" x2="66" y2="108" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="80" y1="92" x2="82" y2="108" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` },
+      { id:'ema4', nome:'Ema', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="72" rx="22" ry="28" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="3"/>
+        <rect x="52" y="30" width="10" height="44" rx="5" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="57" cy="24" r="14" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="52" cy="21" r="5" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="53" cy="21" r="2.5" fill="#1A1A1A"/>
+        <path d="M60 62 Q80 55 85 68 Q80 78 68 72 Z" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="48" y1="98" x2="44" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="60" y1="100" x2="58" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="72" y1="98" x2="72" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'P', nome:'Polvo', emoji:'🐙',
+    correto:'polvo',
+    opcoes:[
+      { id:'polvo', nome:'Polvo', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="52" r="30" fill="#FF8A65" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M34 72 Q28 88 30 100 Q32 106 36 100 Q40 88 38 78" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M44 78 Q40 94 44 106 Q46 110 50 106 Q54 96 52 82" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M56 80 Q56 96 60 108 Q62 112 66 108 Q68 96 66 82" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M68 78 Q72 94 76 106 Q78 110 82 106 Q84 96 80 82" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M78 72 Q86 88 90 100 Q92 106 88 100 Q84 88 82 78" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="50" cy="46" r="8" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="70" cy="46" r="8" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="51" cy="47" r="4" fill="#1A1A1A"/><circle cx="71" cy="47" r="4" fill="#1A1A1A"/>
+        <circle cx="52" cy="46" r="1.5" fill="#fff"/><circle cx="72" cy="46" r="1.5" fill="#fff"/>
+        <path d="M50 60 Q60 68 70 60" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      </svg>` },
+      { id:'pato', nome:'Pato', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="78" rx="30" ry="24" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="48" cy="46" r="22" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="3"/>
+        <ellipse cx="26" cy="50" rx="14" ry="8" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="40" cy="40" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="41" cy="40" r="3.5" fill="#1A1A1A"/>
+        <circle cx="42" cy="39" r="1.5" fill="#fff"/>
+        <path d="M80 65 Q96 58 98 72 Q94 80 84 75 Z" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M70 65 Q82 58 84 72 Q80 80 74 75 Z" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="42" y1="100" x2="36" y2="112" stroke="#FF8A65" stroke-width="4" stroke-linecap="round"/>
+        <line x1="58" y1="102" x2="54" y2="112" stroke="#FF8A65" stroke-width="4" stroke-linecap="round"/>
+        <line x1="72" y1="100" x2="70" y2="112" stroke="#FF8A65" stroke-width="4" stroke-linecap="round"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'Q', nome:'Queijo', emoji:'🧀',
+    correto:'queijo',
+    opcoes:[
+      { id:'queijo', nome:'Queijo', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="10,90 110,90 80,30" fill="#FFD54F" stroke="#1A1A1A" stroke-width="3"/>
+        <polygon points="10,90 110,90 80,30" fill="none" stroke="#F57F17" stroke-width="1.5" stroke-dasharray="6,4" opacity=".5"/>
+        <circle cx="50" cy="70" r="10" fill="#FFFDE7" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="80" cy="75" r="8" fill="#FFFDE7" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="68" cy="58" r="7" fill="#FFFDE7" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="38" cy="82" r="6" fill="#FFFDE7" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="92" cy="62" r="5" fill="#FFFDE7" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="10" y1="90" x2="110" y2="90" stroke="#1A1A1A" stroke-width="3"/>
+      </svg>` },
+      { id:'cupcake', nome:'Cupcake', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <path d="M34 68 Q38 100 60 100 Q82 100 86 68 Z" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <line x1="46" y1="68" x2="50" y2="100" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <line x1="60" y1="68" x2="60" y2="100" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <line x1="74" y1="68" x2="70" y2="100" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <path d="M30 68 Q36 52 60 52 Q84 52 90 68 Z" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M36 52 Q40 28 60 24 Q80 28 84 52" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M36 52 Q44 38 60 36 Q76 38 84 52" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2" opacity=".6"/>
+        <circle cx="60" cy="22" r="4" fill="#EF5350" stroke="#1A1A1A" stroke-width="2"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'R', nome:'Raposa', emoji:'🦊',
+    correto:'raposa',
+    opcoes:[
+      { id:'raposa', nome:'Raposa', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="80" rx="30" ry="22" fill="#FF8A65" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="60" cy="50" r="24" fill="#FF8A65" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M38 34 L24 12 L46 32 Z" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M82 34 L96 12 L74 32 Z" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M38 34 L28 16 L44 32 Z" fill="#fff"/>
+        <path d="M82 34 L92 16 L76 32 Z" fill="#fff"/>
+        <circle cx="52" cy="47" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="68" cy="47" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="53" cy="48" r="3.5" fill="#1A1A1A"/><circle cx="69" cy="48" r="3.5" fill="#1A1A1A"/>
+        <circle cx="54" cy="47" r="1.5" fill="#fff"/><circle cx="70" cy="47" r="1.5" fill="#fff"/>
+        <ellipse cx="60" cy="60" rx="10" ry="7" fill="#FFCCBC" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="56" cy="58" r="2.5" fill="#1A1A1A"/><circle cx="64" cy="58" r="2.5" fill="#1A1A1A"/>
+        <path d="M52 65 Q60 72 68 65" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <line x1="42" y1="100" x2="36" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="58" y1="102" x2="55" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="72" y1="102" x2="71" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="84" y1="100" x2="86" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M88 88 Q102 80 106 92" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+      </svg>` },
+      { id:'porco', nome:'Porco-espinho', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="58" cy="78" rx="32" ry="22" fill="#CE93D8" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="44" cy="58" r="20" fill="#CE93D8" stroke="#1A1A1A" stroke-width="3"/>
+        <line x1="62" y1="58" x2="72" y2="44" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="68" y1="62" x2="82" y2="50" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="72" y1="70" x2="88" y2="62" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="70" y1="80" x2="86" y2="78" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="36" cy="55" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="37" cy="55" r="3" fill="#1A1A1A"/>
+        <ellipse cx="36" cy="64" rx="8" ry="5" fill="#FFCCBC" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M30 70 Q38 76 46 70" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <line x1="36" y1="98" x2="30" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="55" y1="100" x2="52" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="72" y1="98" x2="72" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'S', nome:'Sapo', emoji:'🐸',
+    correto:'sapo',
+    opcoes:[
+      { id:'sapo', nome:'Sapo', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="78" rx="38" ry="28" fill="#66BB6A" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="36" cy="42" r="18" fill="#66BB6A" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="84" cy="42" r="18" fill="#66BB6A" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="36" cy="40" r="10" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="84" cy="40" r="10" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="37" cy="40" r="5" fill="#1A1A1A"/><circle cx="85" cy="40" r="5" fill="#1A1A1A"/>
+        <circle cx="38" cy="39" r="2" fill="#fff"/><circle cx="86" cy="39" r="2" fill="#fff"/>
+        <ellipse cx="60" cy="78" rx="28" ry="16" fill="#81C784" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M38 88 Q60 100 82 88" stroke="#1A1A1A" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M22 88 Q28 100 36 88" fill="#66BB6A" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M84 88 Q92 100 98 88" fill="#66BB6A" stroke="#1A1A1A" stroke-width="2.5"/>
+      </svg>` },
+      { id:'macaco', nome:'Macaco', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="78" rx="28" ry="22" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="60" cy="48" r="24" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="38" cy="38" r="14" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="82" cy="38" r="14" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="38" cy="38" r="8" fill="#FFCC80"/>
+        <circle cx="82" cy="38" r="8" fill="#FFCC80"/>
+        <circle cx="52" cy="44" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="68" cy="44" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="53" cy="45" r="3.5" fill="#1A1A1A"/><circle cx="69" cy="45" r="3.5" fill="#1A1A1A"/>
+        <circle cx="54" cy="44" r="1.5" fill="#fff"/><circle cx="70" cy="44" r="1.5" fill="#fff"/>
+        <ellipse cx="60" cy="58" rx="12" ry="8" fill="#FFAB91" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M52 64 Q60 70 68 64" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <line x1="40" y1="98" x2="32" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="60" y1="100" x2="58" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="78" y1="98" x2="78" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M88 86 Q104 78 106 94" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'T', nome:'Tartaruga', emoji:'🐢',
+    correto:'tartaruga',
+    opcoes:[
+      { id:'tartaruga', nome:'Tartaruga', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="68" rx="36" ry="28" fill="#66BB6A" stroke="#1A1A1A" stroke-width="3"/>
+        <ellipse cx="60" cy="68" rx="28" ry="20" fill="#A5D6A7" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="60" y1="48" x2="60" y2="88" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <line x1="32" y1="68" x2="88" y2="68" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <path d="M35 53 Q48 44 60 48" stroke="#1A1A1A" stroke-width="1.5" fill="none" opacity=".5"/>
+        <path d="M85 53 Q72 44 60 48" stroke="#1A1A1A" stroke-width="1.5" fill="none" opacity=".5"/>
+        <path d="M35 83 Q48 92 60 88" stroke="#1A1A1A" stroke-width="1.5" fill="none" opacity=".5"/>
+        <path d="M85 83 Q72 92 60 88" stroke="#1A1A1A" stroke-width="1.5" fill="none" opacity=".5"/>
+        <circle cx="60" cy="40" r="13" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="55" cy="38" r="4" fill="#1A1A1A"/><circle cx="65" cy="38" r="4" fill="#1A1A1A"/>
+        <circle cx="56" cy="37" r="1.5" fill="#fff"/><circle cx="66" cy="37" r="1.5" fill="#fff"/>
+        <path d="M54 46 Q60 50 66 46" stroke="#1A1A1A" stroke-width="2" fill="none"/>
+        <line x1="30" y1="56" x2="16" y2="48" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="28" y1="80" x2="14" y2="88" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="90" y1="56" x2="104" y2="48" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="92" y1="80" x2="106" y2="88" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="60" y1="96" x2="60" y2="110" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` },
+      { id:'tubarao', nome:'Tubarão', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="58" cy="70" rx="44" ry="22" fill="#90A4AE" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M102 68 Q114 55 112 78 Q108 86 100 80 Z" fill="#90A4AE" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M60 48 L64 26 L72 48 Z" fill="#90A4AE" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M32 62 Q26 50 32 48 Q36 56 34 62 Z" fill="#90A4AE" stroke="#1A1A1A" stroke-width="2"/>
+        <ellipse cx="58" cy="70" rx="32" ry="14" fill="#CFD8DC" stroke="#1A1A1A" stroke-width="1.5"/>
+        <circle cx="36" cy="64" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="37" cy="64" r="3.5" fill="#1A1A1A"/>
+        <path d="M30 76 L36 82 L42 76 L48 82" stroke="#1A1A1A" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'U', nome:'Urso', emoji:'🐻',
+    correto:'urso',
+    opcoes:[
+      { id:'urso', nome:'Urso', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="66" r="32" fill="#8D6E63" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="36" cy="40" r="16" fill="#795548" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="84" cy="40" r="16" fill="#795548" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="36" cy="40" r="9" fill="#8D6E63"/>
+        <circle cx="84" cy="40" r="9" fill="#8D6E63"/>
+        <circle cx="50" cy="60" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="70" cy="60" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="51" cy="61" r="3.5" fill="#1A1A1A"/><circle cx="71" cy="61" r="3.5" fill="#1A1A1A"/>
+        <circle cx="52" cy="60" r="1.5" fill="#fff"/><circle cx="72" cy="60" r="1.5" fill="#fff"/>
+        <ellipse cx="60" cy="74" rx="14" ry="10" fill="#A1887F" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="55" cy="73" r="3" fill="#1A1A1A" opacity=".6"/><circle cx="65" cy="73" r="3" fill="#1A1A1A" opacity=".6"/>
+        <path d="M50 80 Q60 88 70 80" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <ellipse cx="60" cy="96" rx="20" ry="12" fill="#795548" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="42" y1="104" x2="38" y2="116" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="60" y1="108" x2="58" y2="116" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="78" y1="104" x2="78" y2="116" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` },
+      { id:'macaco2', nome:'Macaco', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="78" rx="28" ry="22" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="60" cy="48" r="24" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="38" cy="38" r="14" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="82" cy="38" r="14" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="38" cy="38" r="8" fill="#FFCC80"/>
+        <circle cx="82" cy="38" r="8" fill="#FFCC80"/>
+        <circle cx="52" cy="44" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="68" cy="44" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="53" cy="45" r="3.5" fill="#1A1A1A"/><circle cx="69" cy="45" r="3.5" fill="#1A1A1A"/>
+        <ellipse cx="60" cy="58" rx="12" ry="8" fill="#FFAB91" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M52 64 Q60 70 68 64" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <line x1="40" y1="98" x2="32" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="60" y1="100" x2="58" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="78" y1="98" x2="78" y2="112" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M88 86 Q104 78 106 94" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'V', nome:'Veado', emoji:'🦌',
+    correto:'veado',
+    opcoes:[
+      { id:'veado', nome:'Veado', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="82" rx="28" ry="22" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="60" cy="46" r="22" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M48 27 Q44 16 36 12 Q40 22 38 30" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M44 24 Q38 14 30 10 Q35 20 32 26" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M72 27 Q76 16 84 12 Q80 22 82 30" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M76 24 Q82 14 90 10 Q85 20 88 26" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="52" cy="43" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="68" cy="43" r="7" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="53" cy="44" r="3.5" fill="#1A1A1A"/><circle cx="69" cy="44" r="3.5" fill="#1A1A1A"/>
+        <circle cx="54" cy="43" r="1.5" fill="#fff"/><circle cx="70" cy="43" r="1.5" fill="#fff"/>
+        <ellipse cx="60" cy="55" rx="8" ry="6" fill="#FFAB91" stroke="#1A1A1A" stroke-width="1.5"/>
+        <path d="M53 62 Q60 68 67 62" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <ellipse cx="60" cy="78" rx="18" ry="10" fill="#FFAB91" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <line x1="42" y1="100" x2="38" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="56" y1="103" x2="54" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="70" y1="103" x2="70" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="80" y1="100" x2="82" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` },
+      { id:'raia', nome:'Raia', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="60" rx="48" ry="34" fill="#90A4AE" stroke="#1A1A1A" stroke-width="3"/>
+        <ellipse cx="60" cy="60" rx="36" ry="22" fill="#78909C"/>
+        <line x1="60" y1="94" x2="60" y2="116" stroke="#546E7A" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="48" cy="52" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="49" cy="52" r="3" fill="#1A1A1A"/>
+        <circle cx="72" cy="52" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2"/>
+        <circle cx="73" cy="52" r="3" fill="#1A1A1A"/>
+        <circle cx="46" cy="46" r="3" fill="#1A1A1A" opacity=".5"/>
+        <circle cx="52" cy="44" r="2.5" fill="#1A1A1A" opacity=".5"/>
+        <circle cx="70" cy="44" r="2.5" fill="#1A1A1A" opacity=".5"/>
+        <circle cx="76" cy="46" r="3" fill="#1A1A1A" opacity=".5"/>
+        <path d="M50 64 Q60 72 70 64" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'W', nome:'Waffer', emoji:'🍫',
+    correto:'waffer',
+    opcoes:[
+      { id:'waffer', nome:'Waffer', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="48" width="80" height="38" rx="6" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="3" transform="rotate(-10,60,67)"/>
+        <rect x="22" y="50" width="76" height="34" rx="4" fill="none" stroke="#1A1A1A" stroke-width="1.5" opacity=".4" transform="rotate(-10,60,67)"/>
+        <line x1="34" y1="44" x2="42" y2="82" stroke="#1A1A1A" stroke-width="1.8" opacity=".5" transform="rotate(-10,60,67)"/>
+        <line x1="50" y1="44" x2="58" y2="82" stroke="#1A1A1A" stroke-width="1.8" opacity=".5" transform="rotate(-10,60,67)"/>
+        <line x1="66" y1="44" x2="74" y2="82" stroke="#1A1A1A" stroke-width="1.8" opacity=".5" transform="rotate(-10,60,67)"/>
+        <line x1="82" y1="44" x2="90" y2="82" stroke="#1A1A1A" stroke-width="1.8" opacity=".5" transform="rotate(-10,60,67)"/>
+        <line x1="20" y1="58" x2="100" y2="58" stroke="#1A1A1A" stroke-width="1.8" opacity=".5" transform="rotate(-10,60,67)"/>
+        <line x1="20" y1="74" x2="100" y2="74" stroke="#1A1A1A" stroke-width="1.8" opacity=".5" transform="rotate(-10,60,67)"/>
+      </svg>` },
+      { id:'sorvete', nome:'Sorvete', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="60,108 36,56 84,56" fill="#BCAAA4" stroke="#1A1A1A" stroke-width="2.5"/>
+        <line x1="48" y1="56" x2="54" y2="108" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <line x1="72" y1="56" x2="66" y2="108" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <line x1="36" y1="68" x2="84" y2="68" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <line x1="36" y1="80" x2="84" y2="80" stroke="#1A1A1A" stroke-width="1.5" opacity=".5"/>
+        <circle cx="60" cy="44" r="22" fill="#FFCCBC" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M38 44 Q50 28 60 26 Q70 28 82 44" fill="#FFB74D" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M38 44 Q50 36 60 34 Q70 36 82 44" fill="#FFCC80" stroke="#1A1A1A" stroke-width="1.5"/>
+        <circle cx="60" cy="22" r="5" fill="#EF5350" stroke="#1A1A1A" stroke-width="2"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'X', nome:'Xícara', emoji:'☕',
+    correto:'xicara',
+    opcoes:[
+      { id:'xicara', nome:'Xícara', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="58" cy="88" rx="38" ry="10" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M20 56 Q24 88 58 88 Q92 88 96 56 Z" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="2.5"/>
+        <ellipse cx="58" cy="56" rx="38" ry="10" fill="#ECEFF1" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M96 64 Q110 64 110 76 Q110 88 96 82" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="58" cy="56" rx="28" ry="7" fill="#B3E5FC" stroke="#1A1A1A" stroke-width="1.5"/>
+        <line x1="20" y1="70" x2="96" y2="70" stroke="#ECEFF1" stroke-width="8"/>
+        <line x1="20" y1="70" x2="96" y2="70" stroke="#1A1A1A" stroke-width="1.5" opacity=".3"/>
+        <ellipse cx="58" cy="95" rx="44" ry="7" fill="#B0BEC5" stroke="#1A1A1A" stroke-width="2"/>
+      </svg>` },
+      { id:'copo', nome:'Copo', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <path d="M36 28 Q30 90 34 104 Q38 112 60 112 Q82 112 86 104 Q90 90 84 28 Z" fill="#E3F2FD" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M36 28 Q46 44 60 44 Q74 44 84 28" fill="none" stroke="#1A1A1A" stroke-width="2"/>
+        <ellipse cx="60" cy="28" rx="24" ry="8" fill="#BBDEFB" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M38 28 Q40 44 60 46 Q80 44 82 28" fill="#B3E5FC" opacity=".5"/>
+        <ellipse cx="52" cy="40" rx="6" ry="10" fill="#fff" opacity=".5" transform="rotate(-20,52,40)"/>
+        <path d="M34 104 Q38 114 60 114 Q82 114 86 104" fill="#BBDEFB" stroke="#1A1A1A" stroke-width="2"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'Y', nome:'YouTube', emoji:'▶️',
+    correto:'youtube',
+    opcoes:[
+      { id:'youtube', nome:'YouTube', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="34" width="100" height="66" rx="16" fill="#EF5350" stroke="#1A1A1A" stroke-width="3"/>
+        <polygon points="48,50 48,84 86,67" fill="#fff" stroke="#1A1A1A" stroke-width="2" stroke-linejoin="round"/>
+      </svg>` },
+      { id:'google', nome:'Google', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <path d="M104 60 Q104 86 86 102 Q68 118 44 110 Q20 102 12 78 Q4 54 18 32 Q32 10 58 8 Q84 6 98 26" fill="none" stroke="#1A1A1A" stroke-width="8" stroke-dasharray="12,6"/>
+        <path d="M104 60 Q104 86 86 102 Q68 118 44 110 Q20 102 12 78" fill="none" stroke="#4CAF50" stroke-width="8"/>
+        <path d="M18 32 Q32 10 58 8 Q84 6 98 26" fill="none" stroke="#EF5350" stroke-width="8"/>
+        <path d="M98 26 Q110 46 104 60" fill="none" stroke="#FFC107" stroke-width="8"/>
+        <line x1="60" y1="60" x2="104" y2="60" stroke="#1A1A1A" stroke-width="6" stroke-linecap="round"/>
+        <rect x="58" y="52" width="46" height="16" rx="8" fill="#4285F4"/>
+      </svg>` }
+    ]
+  },
+  {
+    letra:'Z', nome:'Zebra', emoji:'🦓',
+    correto:'zebra',
+    opcoes:[
+      { id:'zebra', nome:'Zebra', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="78" rx="34" ry="24" fill="#fff" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="46" cy="46" r="22" fill="#fff" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M38 26 Q36 14 40 10 Q44 22 42 30" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="1"/>
+        <path d="M54 24 Q54 12 58 8 Q60 20 58 28" fill="#1A1A1A" stroke="#1A1A1A" stroke-width="1"/>
+        <path d="M36 36 Q44 30 52 36" fill="#1A1A1A"/>
+        <path d="M42 42 Q50 36 58 42" fill="#1A1A1A" opacity=".7"/>
+        <path d="M38 50 Q46 44 54 50" fill="#1A1A1A" opacity=".5"/>
+        <circle cx="36" cy="44" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="37" cy="44" r="3" fill="#1A1A1A"/>
+        <circle cx="38" cy="43" r="1.2" fill="#fff"/>
+        <ellipse cx="38" cy="54" rx="8" ry="5" fill="#FFCCBC" stroke="#1A1A1A" stroke-width="2"/>
+        <path d="M32 58 Q40 64 48 58" stroke="#1A1A1A" stroke-width="2.5" fill="none"/>
+        <path d="M40 78 Q50 72 60 78" fill="#1A1A1A"/>
+        <path d="M54 86 Q64 80 74 86" fill="#1A1A1A" opacity=".7"/>
+        <path d="M66 88 Q78 82 88 90" fill="#1A1A1A" opacity=".5"/>
+        <line x1="32" y1="100" x2="26" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="50" y1="102" x2="47" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="68" y1="102" x2="67" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="84" y1="100" x2="85" y2="114" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>` },
+      { id:'passaro', nome:'Pássaro', svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="62" cy="74" rx="30" ry="20" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="52" cy="54" r="18" fill="#FFCC80" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M30 50 Q20 38 30 30 Q40 22 52 36" fill="#FFB74D" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M60 50 Q78 38 92 46 Q88 62 70 62" fill="#FFCC80" stroke="#1A1A1A" stroke-width="2.5"/>
+        <path d="M60 50 Q75 42 86 50 Q82 62 68 60" fill="#FFD54F" stroke="#1A1A1A" stroke-width="1.5"/>
+        <circle cx="44" cy="50" r="6" fill="#fff" stroke="#1A1A1A" stroke-width="2.5"/>
+        <circle cx="45" cy="50" r="3" fill="#1A1A1A"/>
+        <circle cx="46" cy="49" r="1.2" fill="#fff"/>
+        <ellipse cx="36" cy="60" rx="10" ry="6" fill="#FF8A65" stroke="#1A1A1A" stroke-width="2"/>
+        <line x1="46" y1="92" x2="38" y2="108" stroke="#FF8A65" stroke-width="5" stroke-linecap="round"/>
+        <line x1="58" y1="94" x2="54" y2="108" stroke="#FF8A65" stroke-width="5" stroke-linecap="round"/>
+        <line x1="72" y1="92" x2="72" y2="108" stroke="#FF8A65" stroke-width="5" stroke-linecap="round"/>
+      </svg>` }
+    ]
+  }
+];
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+let rodada       = 0;       // how many rounds played
+let concluido    = false;
+let dragTipo     = null;
+let dragCardEl   = null;
+let hintTimeout  = null;
+let instrTimeout = null;
+let touchCard    = null;
+let touchTipo    = null;
+
+let sequencia    = [];     // shuffled order of indices
+let sequIdx      = 0;      // current index in sequencia
+let rodadaAtual  = null;   // current ALFABETO entry
+
+const ghost = document.getElementById('drag-ghost');
+
+// ════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════
+function shuffle(arr) {
+  const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}; return a;
+}
+
+function initAll() {
+  sequencia = shuffle([...Array(ALFABETO.length).keys()]);
+  sequIdx   = 0;
+  rodada    = 0;
+  renderDots();
+  loadRound();
+}
+
+function loadRound() {
+  concluido    = false;
+  dragTipo     = null;
+  dragCardEl   = null;
+  touchCard    = null;
+  touchTipo    = null;
+  clearHintGlow();
+
+  // Pick current letter
+  const idx    = sequencia[sequIdx % sequencia.length];
+  rodadaAtual  = ALFABETO[idx];
+
+  // Update badge & score
+  const badge = document.getElementById('letraBadge');
+  badge.style.transform = 'scale(0)';
+  setTimeout(()=>{ badge.textContent = rodadaAtual.letra; badge.style.transform=''; }, 200);
+
+  document.getElementById('scoreRodada').textContent = rodada + 1;
+  document.getElementById('scoreTotal').textContent  = ALFABETO.length;
+
+  // Fill next dot (rodada already incremented before call for display)
+  // Drop box reset
+  const dropBox = document.getElementById('dropBox');
+  dropBox.classList.remove('correct','over');
+  dropBox.querySelectorAll('svg').forEach(s=>s.remove());
+  dropBox.querySelector('.drop-placeholder').style.display='';
+
+  // Label
+  document.getElementById('dropLabel').textContent = `${rodadaAtual.emoji} ${rodadaAtual.letra} — ${rodadaAtual.nome}`;
+
+  // Cards
+  renderCards();
+
+  setInstruction(`✂️ Arraste o(a) <strong>${rodadaAtual.nome}</strong> para a caixa!`);
+}
+
+function renderCards() {
+  const wrap = document.getElementById('opcoesWrap');
+  wrap.innerHTML='';
+  const shuffledOpts = shuffle(rodadaAtual.opcoes);
+
+  shuffledOpts.forEach((opt, i) => {
+    const card = document.createElement('div');
+    card.className='opcao-card';
+    card.id=`card-${opt.id}`;
+    card.dataset.tipo=opt.id;
+    card.dataset.correto=(opt.id===rodadaAtual.correto)?'true':'false';
+    card.draggable=true;
+    card.style.animationDelay=`${i*.08}s`;
+    card.innerHTML=`${opt.svg}<span class="opcao-nome">${opt.nome}</span>`;
+    card.addEventListener('dragstart',e=>onDragStart(e,opt.id));
+    card.addEventListener('dragend',  e=>onDragEnd(e));
+    attachTouch(card, opt.id);
+    wrap.appendChild(card);
+  });
+}
+
+function renderDots() {
+  const c=document.getElementById('progressDots');
+  c.innerHTML='';
+  ALFABETO.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='dot'; d.id=`dot-${i}`; c.appendChild(d);
+  });
+}
+
+function fillDot() {
+  const dots=document.querySelectorAll('.dot');
+  for(const d of dots){if(!d.classList.contains('filled')){d.classList.add('filled');break;}}
+}
+
+// ════════════════════════════════════════════════
+//  INSTRUCTION BAR
+// ════════════════════════════════════════════════
+function setInstruction(html,modo='',clearAfter=0){
+  clearTimeout(instrTimeout);
+  const bar=document.getElementById('instrucaoBar');
+  bar.innerHTML=html;
+  bar.className='instruction-bar'+(modo?' '+modo+'-mode':'');
+  if(clearAfter>0) instrTimeout=setTimeout(()=>bar.classList.remove(modo+'-mode'),clearAfter);
+}
+function clearHintGlow(){
+  clearTimeout(hintTimeout);
+  document.querySelectorAll('.hint-glow').forEach(c=>c.classList.remove('hint-glow'));
+}
+
+// ════════════════════════════════════════════════
+//  DRAG — MOUSE
+// ════════════════════════════════════════════════
+function onDragStart(e,tipo){
+  if(concluido)return;
+  dragTipo=tipo; dragCardEl=e.currentTarget;
+  dragCardEl.classList.add('dragging-active');
+  playSoundSelect(); clearHintGlow();
+  ghost.innerHTML=dragCardEl.querySelector('svg').outerHTML;
+  ghost.style.display='block';
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',tipo);
+  try{const b=document.createElement('canvas');b.width=b.height=1;e.dataTransfer.setDragImage(b,0,0);}catch(_){}
+  const isCorrect=dragCardEl.dataset.correto==='true';
+  setInstruction(`🖐️ Solte o(a) <strong>${rodadaAtual.nome}</strong> na caixa!`);
+}
+function onDragEnd(e){
+  if(dragCardEl)dragCardEl.classList.remove('dragging-active');
+  ghost.style.display='none';
+}
+document.addEventListener('dragover',e=>{
+  if(ghost.style.display==='block'){ghost.style.left=e.clientX+'px';ghost.style.top=e.clientY+'px';}
+});
+function onDragOver(e){e.preventDefault();if(concluido)return;document.getElementById('dropBox').classList.add('over');}
+function onDragLeave(e){document.getElementById('dropBox').classList.remove('over');}
+function onDrop(e){
+  e.preventDefault();if(concluido)return;
+  document.getElementById('dropBox').classList.remove('over');
+  avaliar(e.dataTransfer.getData('text/plain')||dragTipo);
+}
+
+// ════════════════════════════════════════════════
+//  DRAG — TOUCH
+// ════════════════════════════════════════════════
+function attachTouch(card, tipo){
+  card.addEventListener('touchstart',e=>{
+    if(concluido)return;e.preventDefault();
+    touchCard=card;touchTipo=tipo;
+    playSoundSelect();clearHintGlow();
+    card.classList.add('dragging-active');
+    ghost.innerHTML=card.querySelector('svg').outerHTML;
+    ghost.style.display='block';
+    moveTouchGhost(e.touches[0]);
+    setInstruction(`🖐️ Solte o(a) <strong>${rodadaAtual.nome}</strong> na caixa!`);
+  },{passive:false});
+  card.addEventListener('touchmove',e=>{
+    if(!touchCard)return;e.preventDefault();
+    moveTouchGhost(e.touches[0]);
+    const db=document.getElementById('dropBox');
+    const r=db.getBoundingClientRect(),t=e.touches[0];
+    const over=t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom;
+    db.classList.toggle('over',over&&!concluido);
+  },{passive:false});
+  card.addEventListener('touchend',e=>{
+    if(!touchCard)return;e.preventDefault();
+    touchCard.classList.remove('dragging-active');ghost.style.display='none';
+    const db=document.getElementById('dropBox');
+    const r=db.getBoundingClientRect(),t=e.changedTouches[0];
+    db.classList.remove('over');
+    const dropped=t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom;
+    if(dropped&&!concluido)avaliar(touchTipo);
+    else if(!concluido)setInstruction(`✂️ Arraste o(a) <strong>${rodadaAtual.nome}</strong> para a caixa!`);
+    touchCard=null;touchTipo=null;
+  },{passive:false});
+}
+function moveTouchGhost(touch){ghost.style.left=touch.clientX+'px';ghost.style.top=touch.clientY+'px';}
+
+// ════════════════════════════════════════════════
+//  AVALIAÇÃO
+// ════════════════════════════════════════════════
+function avaliar(tipo){
+  const isCorrect = (tipo === rodadaAtual.correto);
+
+  if(isCorrect){
+    concluido=true;
+    const dropBox=document.getElementById('dropBox');
+    const cardEl=document.getElementById(`card-${tipo}`);
+    const svgClone=cardEl.querySelector('svg').cloneNode(true);
+    svgClone.style.cssText='width:155px;height:155px;';
+    dropBox.querySelector('.drop-placeholder').style.display='none';
+    dropBox.appendChild(svgClone);
+    dropBox.classList.add('correct');
+    cardEl.classList.add('usada');
+    fillDot();
+    rodada++;
+    document.getElementById('scoreRodada').textContent=rodada;
+    playSoundCorrect();
+    setInstruction(`🌟 Muito bem! É o(a) <strong>${rodadaAtual.nome}</strong>! 🎉`,'success');
+    spawnConfetti();
+    setTimeout(()=>playSoundWin(),600);
+    setTimeout(()=>{
+      document.getElementById('winStats').innerHTML=`Você acertou a letra <strong>${rodadaAtual.letra}</strong> — <strong>${rodadaAtual.nome}</strong>! ${rodadaAtual.emoji}<br>${rodada} de ${ALFABETO.length} letras completas!`;
+      document.getElementById('winOverlay').classList.add('show');
+    },1800);
+  } else {
+    // Dica gentil, sem punição
+    playSoundHint();clearHintGlow();
+    const correctCard=document.getElementById(`card-${rodadaAtual.correto}`);
+    if(correctCard)correctCard.classList.add('hint-glow');
+    setInstruction(`💡 Olha bem! Qual deles é o(a) <strong>${rodadaAtual.nome}</strong>? Ele está brilhando!`,'hint');
+    hintTimeout=setTimeout(()=>{
+      clearHintGlow();
+      setInstruction(`✂️ Arraste o(a) <strong>${rodadaAtual.nome}</strong> para a caixa!`);
+    },3400);
+  }
+}
+
+// ════════════════════════════════════════════════
+//  HINT BUTTON
+// ════════════════════════════════════════════════
+function requestHint(){
+  if(concluido)return;
+  clearHintGlow();
+  const correctCard=document.getElementById(`card-${rodadaAtual.correto}`);
+  if(correctCard)correctCard.classList.add('hint-glow');
+  playSoundHint();
+  setInstruction(`💡 O(a) <strong>${rodadaAtual.nome}</strong> está brilhando — é ele que vai na caixa!`,'hint',3500);
+  hintTimeout=setTimeout(()=>{clearHintGlow();setInstruction(`✂️ Arraste o(a) <strong>${rodadaAtual.nome}</strong> para a caixa!`);},3500);
+}
+
+// ════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════
+function nextRound(){
+  document.getElementById('winOverlay').classList.remove('show');
+  clearHintGlow();
+  sequIdx++;
+  if(sequIdx>=ALFABETO.length){
+    // All done — reshuffle and keep playing
+    sequencia=shuffle([...Array(ALFABETO.length).keys()]);
+    sequIdx=0;
+  }
+  setTimeout(loadRound,300);
+}
+
+function restartAll(){
+  document.getElementById('winOverlay').classList.remove('show');
+  clearHintGlow();
+  // Reset dots
+  document.querySelectorAll('.dot').forEach(d=>d.classList.remove('filled'));
+  rodada=0;
+  sequencia=shuffle([...Array(ALFABETO.length).keys()]);
+  sequIdx=0;
+  setTimeout(loadRound,300);
+}
+
+// ════════════════════════════════════════════════
+//  CONFETTI
+// ════════════════════════════════════════════════
+function spawnConfetti(){
+  const canvas=document.getElementById('confetti-canvas');
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  const ctx=canvas.getContext('2d');
+  const colors=['#52BE80','#FFD600','#E91E63','#2196F3','#FF9800','#9C27B0','#fff','#27AE60'];
+  const pieces=Array.from({length:90},()=>({
+    x:Math.random()*canvas.width,y:-20-Math.random()*80,
+    w:8+Math.random()*8,h:12+Math.random()*8,
+    r:Math.random()*Math.PI*2,dr:(Math.random()-.5)*.18,
+    vy:3+Math.random()*4,vx:(Math.random()-.5)*3,
+    color:colors[Math.floor(Math.random()*colors.length)]
+  }));
+  let frame=0;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      p.y+=p.vy;p.x+=p.vx;p.r+=p.dr;
+      const alpha=Math.max(0,1-p.y/(canvas.height*.9));
+      ctx.save();ctx.globalAlpha=alpha;ctx.translate(p.x,p.y);ctx.rotate(p.r);
+      ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
+    });
+    frame++;
+    if(frame<120)requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  requestAnimationFrame(draw);
+}
+
+// ════════════════════════════════════════════════
+//  THEME
+// ════════════════════════════════════════════════
+const themeBtn=document.getElementById('themeBtn');
+const savedTheme=localStorage.getItem('theme')||'dark-mode';
+document.body.classList.add(savedTheme);
+updateThemeIcon();
+themeBtn.addEventListener('click',()=>{
+  const dark=document.body.classList.contains('dark-mode');
+  document.body.classList.replace(dark?'dark-mode':'light-mode',dark?'light-mode':'dark-mode');
+  localStorage.setItem('theme',dark?'light-mode':'dark-mode');
+  updateThemeIcon();
+});
+function updateThemeIcon(){themeBtn.querySelector('i').className=document.body.classList.contains('dark-mode')?'bi bi-moon-fill':'bi bi-sun-fill';}
+
+// ─── START ───
+initAll();
+</script>
+</body>
+</html>
