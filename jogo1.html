@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo das Sombras</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+    :root {
+      --primary-green: #27AE60;
+      --primary-green-dark: #1E8449;
+      --primary-green-light: #52BE80;
+      --dark-card: #1A1A1A;
+      --dark-text: #E0E0E0;
+      --light-card: #FFFFFF;
+      --light-text: #212529;
+      --border-color: rgba(39, 174, 96, 0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Nunito', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    body.dark-mode {
+      background: linear-gradient(135deg, #0F0F0F 0%, #1A1A1A 100%);
+      color: var(--dark-text);
+    }
+
+    body.light-mode {
+      background: linear-gradient(135deg, #E8F8F5 0%, #D5F4E6 100%);
+      color: var(--light-text);
+    }
+
+    /* ── Theme Toggle ── */
+    .theme-toggle { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+
+    .btn-theme {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      border: 2px solid var(--primary-green);
+      background: rgba(39,174,96,.1);
+      cursor: pointer; font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .3s ease;
+      color: var(--primary-green-light);
+    }
+    .btn-theme:hover { transform: scale(1.1); box-shadow: 0 5px 15px rgba(39,174,96,.3); }
+
+    /* ── Header ── */
+    .game-header { text-align: center; padding: 40px 20px 10px; }
+
+    .game-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin-bottom: 6px; }
+    .game-title .highlight { color: var(--primary-green-light); }
+    .dark-mode  .game-title { color: var(--dark-text); }
+    .light-mode .game-title { color: var(--primary-green-dark); }
+
+    .game-subtitle { font-size: 15px; opacity: .6; margin-bottom: 16px; }
+
+    /* ── Score Bar ── */
+    .score-bar { display: flex; justify-content: center; align-items: center; gap: 30px; margin-bottom: 10px; }
+    .score-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .score-value { font-size: 32px; font-weight: 900; color: var(--primary-green-light); line-height: 1; }
+    .score-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: .5; font-weight: 700; }
+    .score-divider { width: 2px; height: 40px; background: var(--border-color); border-radius: 2px; }
+
+    /* ── Instruction Bar ── */
+    .instruction-bar {
+      text-align: center; font-size: 16px; font-weight: 800;
+      padding: 12px 24px; border-radius: 50px;
+      margin: 10px auto 16px; max-width: 520px;
+      transition: all .4s ease; letter-spacing: .3px;
+    }
+    .dark-mode  .instruction-bar { background: rgba(39,174,96,.1); border: 1.5px solid var(--border-color); color: var(--primary-green-light); }
+    .light-mode .instruction-bar { background: rgba(39,174,96,.08); border: 1.5px solid rgba(39,174,96,.25); color: var(--primary-green-dark); }
+
+    /* Hint state — warm golden, NO red */
+    .instruction-bar.hint-mode {
+      background: rgba(255,200,50,.12) !important;
+      border-color: rgba(255,200,50,.5) !important;
+      color: #E6A817 !important;
+      animation: hintBarPulse 1.3s ease infinite;
+    }
+    @keyframes hintBarPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(255,200,50,0); }
+      50%      { box-shadow: 0 0 0 6px rgba(255,200,50,.12); }
+    }
+
+    /* ── Progress Dots ── */
+    .progress-dots { display: flex; justify-content: center; gap: 8px; margin: 4px 0 18px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; transition: all .4s ease; }
+    .dark-mode  .dot { background: rgba(39,174,96,.2); border: 2px solid var(--border-color); }
+    .light-mode .dot { background: rgba(39,174,96,.15); border: 2px solid rgba(39,174,96,.3); }
+    .dot.filled { background: var(--primary-green-light) !important; border-color: var(--primary-green) !important; transform: scale(1.2); }
+
+    /* ── Game Board ── */
+    .game-container { max-width: 900px; margin: 0 auto; padding: 0 20px 20px; }
+    .game-board { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: start; }
+
+    .column-header {
+      text-align: center; font-size: 13px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 2px;
+      margin-bottom: 15px; padding: 10px; border-radius: 10px;
+      color: var(--primary-green-light);
+    }
+    .dark-mode  .column-header { background: rgba(39,174,96,.08); border: 1px solid var(--border-color); }
+    .light-mode .column-header { background: rgba(39,174,96,.10); border: 1px solid rgba(39,174,96,.2); }
+
+    .items-column, .shadows-column { display: flex; flex-direction: column; gap: 12px; }
+
+    /* ── Cards ── */
+    .toy-card {
+      border-radius: 16px; padding: 18px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all .3s cubic-bezier(.34,1.56,.64,1);
+      border: 2px solid transparent; position: relative;
+      min-height: 110px; animation: cardIn .4s ease-out both;
+      user-select: none;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px) scale(.95); }
+      to   { opacity: 1; transform: translateY(0)    scale(1);   }
+    }
+    .dark-mode  .toy-card { background: rgba(30,30,30,.8); border-color: var(--border-color); }
+    .light-mode .toy-card { background: #FFF; border-color: rgba(0,0,0,.08); box-shadow: 0 4px 15px rgba(0,0,0,.06); }
+
+    .toy-card:hover { transform: translateY(-4px) scale(1.02); }
+    .dark-mode  .toy-card:hover { border-color: var(--primary-green-light); background: rgba(39,174,96,.08); box-shadow: 0 8px 25px rgba(39,174,96,.15); }
+    .light-mode .toy-card:hover { border-color: var(--primary-green); box-shadow: 0 8px 25px rgba(39,174,96,.2); }
+
+    /* Selected */
+    .toy-card.selected {
+      border-color: var(--primary-green-light) !important;
+      background: rgba(39,174,96,.12) !important;
+      box-shadow: 0 0 0 3px rgba(39,174,96,.2), 0 8px 30px rgba(39,174,96,.2) !important;
+      transform: scale(1.04) !important;
+    }
+
+    /* Correct */
+    .toy-card.correct {
+      border-color: #27AE60 !important;
+      background: rgba(39,174,96,.18) !important;
+      cursor: default;
+      animation: correctPop .55s cubic-bezier(.34,1.56,.64,1);
+    }
+    .toy-card.matched { opacity: .55; cursor: default; pointer-events: none; }
+
+    @keyframes correctPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.13); }
+      70%  { transform: scale(.97); }
+      100% { transform: scale(1); }
+    }
+
+    /* Hint glow — golden warm, NO red, NO shake */
+    .toy-card.hint-glow {
+      border-color: #F0B429 !important;
+      background: rgba(240,180,41,.1) !important;
+      box-shadow: 0 0 0 3px rgba(240,180,41,.22), 0 8px 24px rgba(240,180,41,.18) !important;
+      animation: hintCardPulse 1.3s ease infinite !important;
+    }
+    @keyframes hintCardPulse {
+      0%,100% { transform: scale(1); }
+      50%     { transform: scale(1.04); }
+    }
+
+    /* Emoji */
+    .toy-emoji { font-size: 60px; line-height: 1; transition: transform .3s ease; pointer-events: none; }
+    .toy-card:hover .toy-emoji { transform: scale(1.1); }
+
+    /* Shadow filter */
+    .shadow-card .toy-emoji { filter: brightness(0) opacity(.75); }
+    .dark-mode .shadow-card .toy-emoji { filter: brightness(0) invert(1) opacity(.85); }
+
+    /* Match badge */
+    .match-badge {
+      position: absolute; top: 8px; right: 8px;
+      width: 26px; height: 26px; border-radius: 50%;
+      display: none; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800;
+      background: var(--primary-green); color: white;
+    }
+    .toy-card.correct .match-badge { display: flex; }
+
+    /* ── Buttons ── */
+    .game-actions { display: flex; justify-content: center; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+
+    .btn-game {
+      padding: 14px 28px; border-radius: 50px;
+      border: 2px solid var(--primary-green);
+      font-size: 15px; font-weight: 800; cursor: pointer;
+      transition: all .3s ease; font-family: 'Nunito', sans-serif;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-primary-game { background: var(--primary-green); color: white; }
+    .btn-primary-game:hover { background: var(--primary-green-dark); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(39,174,96,.35); }
+    .dark-mode  .btn-secondary-game { background: rgba(39,174,96,.1); color: var(--primary-green-light); }
+    .light-mode .btn-secondary-game { background: rgba(39,174,96,.08); color: var(--primary-green-dark); }
+    .btn-secondary-game:hover { background: rgba(39,174,96,.2); transform: translateY(-2px); }
+
+    /* ── Win Modal ── */
+    .win-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2000; opacity: 0; pointer-events: none; transition: opacity .4s ease;
+    }
+    .win-overlay.show { opacity: 1; pointer-events: all; }
+
+    .win-modal {
+      border-radius: 24px; padding: 50px 40px; text-align: center;
+      max-width: 400px; width: 90%;
+      border: 2px solid var(--primary-green);
+      box-shadow: 0 20px 60px rgba(39,174,96,.3);
+      transform: scale(.8); transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .dark-mode  .win-modal { background: var(--dark-card); }
+    .light-mode .win-modal { background: white; }
+    .win-overlay.show .win-modal { transform: scale(1); }
+
+    .win-emoji { font-size: 80px; margin-bottom: 16px; display: block; animation: winBounce .8s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes winBounce {
+      0%   { transform: scale(0) rotate(-10deg); }
+      60%  { transform: scale(1.15) rotate(5deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+    .win-title { font-size: 34px; font-weight: 900; color: var(--primary-green-light); margin-bottom: 8px; }
+    .win-stats { font-size: 16px; opacity: .7; margin-bottom: 28px; line-height: 1.6; }
+    .stars { font-size: 40px; margin-bottom: 12px; letter-spacing: 6px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .game-title { font-size: 30px; }
+      .game-board { gap: 10px; }
+      .toy-card { padding: 14px; min-height: 90px; }
+      .toy-emoji { font-size: 46px; }
+      .instruction-bar { font-size: 14px; padding: 10px 18px; }
+    }
+  </style>
+</head>
+<body class="dark-mode">
+
+  <!-- Theme Toggle -->
+  <div class="theme-toggle">
+    <button id="themeBtn" class="btn-theme" title="Alternar tema">
+      <i class="bi bi-moon-fill"></i>
+    </button>
+  </div>
+
+  <!-- Win Overlay -->
+  <div class="win-overlay" id="winOverlay">
+    <div class="win-modal">
+      <span class="win-emoji">🏆</span>
+      <div class="stars">⭐⭐⭐</div>
+      <div class="win-title">Incrível!</div>
+      <div class="win-stats" id="winStats">Você encontrou todos os pares!</div>
+      <button class="btn-game btn-primary-game" onclick="restartGame()" style="margin:0 auto;display:flex;">
+        <i class="bi bi-arrow-clockwise"></i> Jogar de Novo
+      </button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="game-header">
+    <h1 class="game-title">Jogo das <span class="highlight">Sombras</span></h1>
+    <p class="game-subtitle">Encontre a sombra de cada brinquedo!</p>
+
+    <div class="score-bar">
+      <div class="score-item">
+        <div class="score-value" id="scoreCorrect">0</div>
+        <div class="score-label">Acertos</div>
+      </div>
+      <div class="score-divider"></div>
+      <div class="score-item">
+        <div class="score-value" id="scoreTotal">5</div>
+        <div class="score-label">Total</div>
+      </div>
+    </div>
+
+    <div class="progress-dots" id="progressDots"></div>
+    <div class="instruction-bar" id="instructionBar">👆 Toque em um brinquedo!</div>
+  </div>
+
+  <!-- Game Board -->
+  <div class="game-container">
+    <div class="game-board">
+      <div>
+        <div class="column-header">🧸 Brinquedos</div>
+        <div class="items-column" id="itemsColumn"></div>
+      </div>
+      <div>
+        <div class="column-header">🌑 Sombras</div>
+        <div class="shadows-column" id="shadowsColumn"></div>
+      </div>
+    </div>
+
+    <div class="game-actions">
+      <button class="btn-game btn-primary-game" onclick="restartGame()">
+        <i class="bi bi-arrow-clockwise"></i> Novo Jogo
+      </button>
+      <button class="btn-game btn-secondary-game" onclick="requestHint()">
+        <i class="bi bi-lightbulb"></i> Dica
+      </button>
+    </div>
+  </div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  AUDIO ENGINE — Web Audio API (sem arquivos externos)
+// ═══════════════════════════════════════════════
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq, type, duration, volume, delay = 0) {
+  try {
+    ensureAudio();
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+    gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
+    gain.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + delay + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + duration + 0.05);
+  } catch(e) { /* silent fail */ }
+}
+
+// ✅ ACERTO — acorde alegre ascendente (Dó-Mi-Sol + brilho)
+function playSoundCorrect() {
+  playTone(523.25, 'sine', 0.30, 0.32, 0.00); // C5
+  playTone(659.25, 'sine', 0.30, 0.32, 0.12); // E5
+  playTone(783.99, 'sine', 0.35, 0.32, 0.24); // G5
+  playTone(1046.5, 'sine', 0.22, 0.18, 0.40); // C6 brilho
+}
+
+// 🏆 VITÓRIA — fanfarra celebratória
+function playSoundWin() {
+  const seq = [
+    [523.25,.18,.00],[523.25,.18,.18],[783.99,.40,.36],
+    [698.46,.18,.80],[659.25,.18,.98],[587.33,.18,1.16],
+    [1046.5,.55,1.34]
+  ];
+  seq.forEach(([f,d,t]) => playTone(f,'sine',d,0.30,t));
+}
+
+// 💡 DICA — suave, acolhedor, NÃO alarmante
+function playSoundHint() {
+  playTone(392.00, 'sine', 0.28, 0.18, 0.00);
+  playTone(523.25, 'sine', 0.28, 0.18, 0.20);
+}
+
+// 🔘 SELEÇÃO — clique suave
+function playSoundSelect() {
+  playTone(660, 'sine', 0.10, 0.12);
+}
+
+// ═══════════════════════════════════════════════
+//  DADOS DO JOGO
+// ═══════════════════════════════════════════════
+const TOYS = [
+  { id: 'dino',  name: 'Dinossauro', emoji: '🦕' },
+  { id: 'truck', name: 'Caminhão',   emoji: '🚛' },
+  { id: 'robot', name: 'Robô',       emoji: '🤖' },
+  { id: 'doll',  name: 'Boneca',     emoji: '🪆' },
+  { id: 'yoyo',  name: 'Ioiô',       emoji: '🪀' },
+];
+
+let selectedItem   = null;
+let selectedShadow = null;
+let matchedPairs   = new Set();
+let itemOrder      = [];
+let shadowOrder    = [];
+let hintTimeout    = null;
+let instrTimeout   = null;
+
+// ═══════════════════════════════════════════════
+//  UTILITÁRIOS
+// ═══════════════════════════════════════════════
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function setInstruction(text, isHint = false, clearAfter = 0) {
+  clearTimeout(instrTimeout);
+  const bar = document.getElementById('instructionBar');
+  bar.textContent = text;
+  bar.classList.toggle('hint-mode', isHint);
+  if (clearAfter > 0) {
+    instrTimeout = setTimeout(() => bar.classList.remove('hint-mode'), clearAfter);
+  }
+}
+
+function clearHintGlow() {
+  clearTimeout(hintTimeout);
+  document.querySelectorAll('.hint-glow').forEach(c => c.classList.remove('hint-glow'));
+}
+
+// ═══════════════════════════════════════════════
+//  INICIALIZAÇÃO E RENDERIZAÇÃO
+// ═══════════════════════════════════════════════
+function initGame() {
+  selectedItem   = null;
+  selectedShadow = null;
+  matchedPairs   = new Set();
+  itemOrder      = shuffle(TOYS);
+  shadowOrder    = shuffle(TOYS);
+  renderBoard();
+  renderDots();
+  updateScore();
+  setInstruction('👆 Toque em um brinquedo!');
+}
+
+function renderBoard() {
+  const itemsCol   = document.getElementById('itemsColumn');
+  const shadowsCol = document.getElementById('shadowsColumn');
+  itemsCol.innerHTML   = '';
+  shadowsCol.innerHTML = '';
+
+  itemOrder.forEach((toy, i) => {
+    const card = document.createElement('div');
+    card.className = 'toy-card item-card';
+    card.dataset.id = toy.id;
+    card.style.animationDelay = `${i * 0.08}s`;
+    card.innerHTML = `<span class="toy-emoji">${toy.emoji}</span><span class="match-badge"><i class="bi bi-check2"></i></span>`;
+    card.addEventListener('click', () => onItemClick(toy.id));
+    itemsCol.appendChild(card);
+  });
+
+  shadowOrder.forEach((toy, i) => {
+    const card = document.createElement('div');
+    card.className = 'toy-card shadow-card';
+    card.dataset.id = toy.id;
+    card.style.animationDelay = `${i * 0.08}s`;
+    card.innerHTML = `<span class="toy-emoji">${toy.emoji}</span><span class="match-badge"><i class="bi bi-check2"></i></span>`;
+    card.addEventListener('click', () => onShadowClick(toy.id));
+    shadowsCol.appendChild(card);
+  });
+}
+
+function renderDots() {
+  const container = document.getElementById('progressDots');
+  container.innerHTML = '';
+  TOYS.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    container.appendChild(dot);
+  });
+}
+
+function fillNextDot() {
+  const dots = document.querySelectorAll('.dot');
+  for (const dot of dots) {
+    if (!dot.classList.contains('filled')) { dot.classList.add('filled'); break; }
+  }
+}
+
+function updateScore() {
+  document.getElementById('scoreCorrect').textContent = matchedPairs.size;
+  document.getElementById('scoreTotal').textContent   = TOYS.length;
+}
+
+// ═══════════════════════════════════════════════
+//  SELEÇÃO DE PEÇAS
+// ═══════════════════════════════════════════════
+function onItemClick(id) {
+  if (matchedPairs.has(id)) return;
+  clearHintGlow();
+  playSoundSelect();
+
+  if (selectedItem === id) {
+    document.querySelectorAll('.item-card.selected').forEach(c => c.classList.remove('selected'));
+    selectedItem = null;
+    setInstruction('👆 Toque em um brinquedo!');
+    return;
+  }
+
+  document.querySelectorAll('.item-card.selected').forEach(c => c.classList.remove('selected'));
+  selectedItem = id;
+  document.querySelector(`.item-card[data-id="${id}"]`).classList.add('selected');
+
+  const toy = TOYS.find(t => t.id === id);
+  setInstruction(`${toy.emoji} Ótimo! Agora toque na sombra do ${toy.name}!`);
+
+  if (selectedShadow !== null) checkMatch();
+}
+
+function onShadowClick(id) {
+  if (matchedPairs.has(id)) return;
+  clearHintGlow();
+  playSoundSelect();
+
+  if (selectedShadow === id) {
+    document.querySelectorAll('.shadow-card.selected').forEach(c => c.classList.remove('selected'));
+    selectedShadow = null;
+    setInstruction('🌑 Toque em uma sombra!');
+    return;
+  }
+
+  document.querySelectorAll('.shadow-card.selected').forEach(c => c.classList.remove('selected'));
+  selectedShadow = id;
+  document.querySelector(`.shadow-card[data-id="${id}"]`).classList.add('selected');
+
+  setInstruction('🧸 Agora toque no brinquedo que combina!');
+
+  if (selectedItem !== null) checkMatch();
+}
+
+// ═══════════════════════════════════════════════
+//  VERIFICAÇÃO — sem punição, sem vermelho, sem shake
+// ═══════════════════════════════════════════════
+function checkMatch() {
+  const isMatch = selectedItem === selectedShadow;
+
+  const itemCard   = document.querySelector(`.item-card[data-id="${selectedItem}"]`);
+  const shadowCard = document.querySelector(`.shadow-card[data-id="${selectedShadow}"]`);
+
+  if (isMatch) {
+    // ─── ACERTO ───────────────────────────────
+    playSoundCorrect();
+
+    itemCard.classList.remove('selected');
+    shadowCard.classList.remove('selected');
+    itemCard.classList.add('correct', 'matched');
+    shadowCard.classList.add('correct', 'matched');
+
+    matchedPairs.add(selectedItem);
+    fillNextDot();
+    updateScore();
+
+    const toy = TOYS.find(t => t.id === selectedItem);
+    setInstruction(`🌟 Muito bem! Você achou o ${toy.name}! 🎉`);
+
+    selectedItem   = null;
+    selectedShadow = null;
+
+    if (matchedPairs.size === TOYS.length) {
+      setTimeout(showWin, 750);
+    } else {
+      setTimeout(() => setInstruction('👆 Continue! Toque em outro brinquedo!'), 2000);
+    }
+
+  } else {
+    // ─── NÃO COMBINOU — dica gentil, sem punição ──
+    // Desseleciona silenciosamente sem nenhum feedback negativo visual
+    itemCard.classList.remove('selected');
+    shadowCard.classList.remove('selected');
+
+    // Guarda o item selecionado para a dica e reseta o estado
+    const hintToyId = selectedItem;
+    selectedItem   = null;
+    selectedShadow = null;
+
+    // Destaca em dourado o par correto (brinquedo + sombra certa)
+    const correctItemCard   = document.querySelector(`.item-card[data-id="${hintToyId}"]`);
+    const correctShadowCard = document.querySelector(`.shadow-card[data-id="${hintToyId}"]`);
+
+    if (correctItemCard)   correctItemCard.classList.add('hint-glow');
+    if (correctShadowCard) correctShadowCard.classList.add('hint-glow');
+
+    // Som suave de dica (não alarmante)
+    playSoundHint();
+
+    // Mensagem encorajadora com dica visual
+    const toy = TOYS.find(t => t.id === hintToyId);
+    const msg = toy
+      ? `💡 Olha com atenção! Qual sombra tem a forma de um ${toy.name}?`
+      : `💡 Observe bem as formas! Elas estão brilhando para te ajudar!`;
+
+    setInstruction(msg, true, 3500);
+
+    // Remove o brilho após 3.5s e volta à instrução normal
+    hintTimeout = setTimeout(() => {
+      clearHintGlow();
+      setInstruction('👆 Toque em um brinquedo para continuar!');
+    }, 3500);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  BOTÃO DE DICA
+// ═══════════════════════════════════════════════
+function requestHint() {
+  clearHintGlow();
+  const unmatched = TOYS.filter(t => !matchedPairs.has(t.id));
+  if (!unmatched.length) return;
+
+  const target = unmatched[Math.floor(Math.random() * unmatched.length)];
+  const itemCard   = document.querySelector(`.item-card[data-id="${target.id}"]`);
+  const shadowCard = document.querySelector(`.shadow-card[data-id="${target.id}"]`);
+
+  [itemCard, shadowCard].forEach(c => { if (c) c.classList.add('hint-glow'); });
+
+  playSoundHint();
+  setInstruction(`💡 O ${target.name} está brilhando para te ajudar!`, true, 3500);
+
+  hintTimeout = setTimeout(() => {
+    clearHintGlow();
+    setInstruction('👆 Toque em um brinquedo!');
+  }, 3500);
+}
+
+// ═══════════════════════════════════════════════
+//  VITÓRIA
+// ═══════════════════════════════════════════════
+function showWin() {
+  playSoundWin();
+  document.getElementById('winStats').textContent = `Você encontrou todos os ${TOYS.length} pares! Você é demais! 🎊`;
+  document.getElementById('winOverlay').classList.add('show');
+}
+
+function restartGame() {
+  document.getElementById('winOverlay').classList.remove('show');
+  clearHintGlow();
+  setTimeout(initGame, 300);
+}
+
+// ═══════════════════════════════════════════════
+//  TEMA CLARO / ESCURO
+// ═══════════════════════════════════════════════
+const themeBtn   = document.getElementById('themeBtn');
+const savedTheme = localStorage.getItem('theme') || 'dark-mode';
+document.body.classList.remove('dark-mode', 'light-mode');
+document.body.classList.add(savedTheme);
+updateThemeIcon();
+
+themeBtn.addEventListener('click', () => {
+  const isDark = document.body.classList.contains('dark-mode');
+  document.body.classList.replace(isDark ? 'dark-mode' : 'light-mode', isDark ? 'light-mode' : 'dark-mode');
+  localStorage.setItem('theme', isDark ? 'light-mode' : 'dark-mode');
+  updateThemeIcon();
+  renderBoard();
+});
+
+function updateThemeIcon() {
+  themeBtn.querySelector('i').className = document.body.classList.contains('dark-mode')
+    ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+}
+
+// ─── INICIAR ───
+initGame();
+</script>
+</body>
+</html>

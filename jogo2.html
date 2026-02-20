@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Caminho das Sombras</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+    :root {
+      --primary-green: #27AE60;
+      --primary-green-dark: #1E8449;
+      --primary-green-light: #52BE80;
+      --dark-card: #1A1A1A;
+      --dark-text: #E0E0E0;
+      --light-card: #FFFFFF;
+      --light-text: #212529;
+      --border-color: rgba(39, 174, 96, 0.3);
+      --hint-gold: #F0B429;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Nunito', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.4s ease, color 0.4s ease;
+      touch-action: none;
+    }
+
+    body.dark-mode {
+      background: linear-gradient(135deg, #0F0F0F 0%, #1A1A1A 100%);
+      color: var(--dark-text);
+    }
+    body.light-mode {
+      background: linear-gradient(135deg, #E8F8F5 0%, #D5F4E6 100%);
+      color: var(--light-text);
+    }
+
+    /* ── Theme Toggle ── */
+    .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 1000; }
+    .btn-theme {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 2px solid var(--primary-green);
+      background: rgba(39,174,96,.1);
+      cursor: pointer; font-size: 19px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .3s ease; color: var(--primary-green-light);
+    }
+    .btn-theme:hover { transform: scale(1.1); box-shadow: 0 5px 15px rgba(39,174,96,.3); }
+
+    /* ── Header ── */
+    .game-header { text-align: center; padding: 36px 20px 10px; }
+
+    .game-title { font-size: 38px; font-weight: 900; letter-spacing: -1px; margin-bottom: 4px; }
+    .game-title .highlight { color: var(--primary-green-light); }
+    .dark-mode  .game-title { color: var(--dark-text); }
+    .light-mode .game-title { color: var(--primary-green-dark); }
+
+    .game-subtitle { font-size: 14px; opacity: .6; margin-bottom: 14px; }
+
+    /* ── Score ── */
+    .score-bar { display: flex; justify-content: center; align-items: center; gap: 26px; margin-bottom: 10px; }
+    .score-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .score-value { font-size: 30px; font-weight: 900; color: var(--primary-green-light); line-height: 1; }
+    .score-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: .5; font-weight: 700; }
+    .score-divider { width: 2px; height: 36px; background: var(--border-color); border-radius: 2px; }
+
+    /* ── Progress Dots ── */
+    .progress-dots { display: flex; justify-content: center; gap: 8px; margin: 6px 0 10px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; transition: all .4s ease; }
+    .dark-mode  .dot { background: rgba(39,174,96,.2); border: 2px solid var(--border-color); }
+    .light-mode .dot { background: rgba(39,174,96,.15); border: 2px solid rgba(39,174,96,.3); }
+    .dot.filled { background: var(--primary-green-light) !important; border-color: var(--primary-green) !important; transform: scale(1.2); }
+
+    /* ── Instruction Bar ── */
+    .instruction-bar {
+      text-align: center; font-size: 15px; font-weight: 800;
+      padding: 10px 22px; border-radius: 50px;
+      margin: 0 auto 14px; max-width: 500px;
+      transition: all .4s ease; letter-spacing: .2px;
+      display: inline-block;
+    }
+    .dark-mode  .instruction-bar { background: rgba(39,174,96,.1); border: 1.5px solid var(--border-color); color: var(--primary-green-light); }
+    .light-mode .instruction-bar { background: rgba(39,174,96,.08); border: 1.5px solid rgba(39,174,96,.25); color: var(--primary-green-dark); }
+    .instruction-bar.hint-mode {
+      background: rgba(240,180,41,.12) !important;
+      border-color: rgba(240,180,41,.5) !important;
+      color: #E6A817 !important;
+      animation: hintBarPulse 1.3s ease infinite;
+    }
+    @keyframes hintBarPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(240,180,41,0); }
+      50%     { box-shadow: 0 0 0 6px rgba(240,180,41,.12); }
+    }
+
+    .instr-wrap { text-align: center; }
+
+    /* ── GAME AREA ── */
+    .game-area-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 16px 10px;
+    }
+
+    /* SVG canvas — sits over everything for drawing */
+    #drawCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 10;
+      overflow: visible;
+    }
+
+    /* Two columns */
+    .columns-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .col-header {
+      text-align: center;
+      font-size: 12px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 2px;
+      margin-bottom: 12px; padding: 9px;
+      border-radius: 10px; color: var(--primary-green-light);
+    }
+    .dark-mode  .col-header { background: rgba(39,174,96,.08); border: 1px solid var(--border-color); }
+    .light-mode .col-header { background: rgba(39,174,96,.10); border: 1px solid rgba(39,174,96,.2); }
+
+    .toy-list, .shadow-list { display: flex; flex-direction: column; gap: 10px; }
+
+    /* ── Item Cards ── */
+    .toy-card {
+      border-radius: 14px; padding: 14px 16px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; min-height: 90px;
+      transition: all .3s cubic-bezier(.34,1.56,.64,1);
+      border: 2.5px solid transparent;
+      animation: cardIn .4s ease-out both;
+      user-select: none;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(18px) scale(.94); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .dark-mode  .toy-card { background: rgba(30,30,30,.85); border-color: var(--border-color); }
+    .light-mode .toy-card { background: #FFF; border-color: rgba(0,0,0,.07); box-shadow: 0 3px 12px rgba(0,0,0,.06); }
+
+    .toy-emoji { font-size: 52px; line-height: 1; pointer-events: none; transition: transform .3s ease; }
+    .toy-card:hover .toy-emoji { transform: scale(1.08); }
+
+    /* Shadow filter */
+    .shadow-card .toy-emoji { filter: brightness(0) opacity(.72); }
+    .dark-mode .shadow-card .toy-emoji { filter: brightness(0) invert(1) opacity(.82); }
+
+    /* Dot anchor — shows where line starts/ends */
+    .anchor-dot {
+      position: absolute;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 3px solid var(--primary-green);
+      background: rgba(39,174,96,.18);
+      transition: all .3s ease;
+      z-index: 20;
+      cursor: crosshair;
+    }
+    /* Item card: anchor on right side center */
+    .item-card .anchor-dot { right: -9px; top: 50%; transform: translateY(-50%); }
+    /* Shadow card: anchor on left side center */
+    .shadow-card .anchor-dot { left: -9px; top: 50%; transform: translateY(-50%); }
+
+    /* Active dragging source */
+    .toy-card.dragging {
+      border-color: var(--primary-green-light) !important;
+      background: rgba(39,174,96,.13) !important;
+      box-shadow: 0 0 0 3px rgba(39,174,96,.2) !important;
+      transform: scale(1.03);
+    }
+
+    /* Correct match */
+    .toy-card.correct {
+      border-color: var(--primary-green) !important;
+      background: rgba(39,174,96,.18) !important;
+      pointer-events: none;
+      animation: correctPop .55s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes correctPop {
+      0%  { transform: scale(1); }
+      40% { transform: scale(1.1); }
+      70% { transform: scale(.97); }
+      100%{ transform: scale(1); }
+    }
+    .toy-card.matched { opacity: .55; pointer-events: none; }
+
+    /* Hint glow */
+    .toy-card.hint-glow {
+      border-color: var(--hint-gold) !important;
+      background: rgba(240,180,41,.1) !important;
+      box-shadow: 0 0 0 3px rgba(240,180,41,.2), 0 6px 20px rgba(240,180,41,.15) !important;
+      animation: hintCardPulse 1.3s ease infinite !important;
+    }
+    @keyframes hintCardPulse {
+      0%,100% { transform: scale(1); }
+      50%     { transform: scale(1.04); }
+    }
+
+    /* Match badge */
+    .match-badge {
+      position: absolute; top: 7px; right: 7px;
+      width: 24px; height: 24px; border-radius: 50%;
+      display: none; align-items: center; justify-content: center;
+      font-size: 13px; background: var(--primary-green); color: white;
+    }
+    .toy-card.correct .match-badge { display: flex; }
+
+    /* ── Buttons ── */
+    .game-actions { display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; padding-bottom: 30px; }
+
+    .btn-game {
+      padding: 13px 26px; border-radius: 50px;
+      border: 2px solid var(--primary-green);
+      font-size: 14px; font-weight: 800; cursor: pointer;
+      transition: all .3s ease; font-family: 'Nunito', sans-serif;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-primary-game { background: var(--primary-green); color: white; }
+    .btn-primary-game:hover { background: var(--primary-green-dark); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(39,174,96,.35); }
+    .dark-mode  .btn-secondary-game { background: rgba(39,174,96,.1); color: var(--primary-green-light); }
+    .light-mode .btn-secondary-game { background: rgba(39,174,96,.08); color: var(--primary-green-dark); }
+    .btn-secondary-game:hover { background: rgba(39,174,96,.2); transform: translateY(-2px); }
+
+    /* ── Win Modal ── */
+    .win-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.72); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 3000; opacity: 0; pointer-events: none; transition: opacity .4s ease;
+    }
+    .win-overlay.show { opacity: 1; pointer-events: all; }
+    .win-modal {
+      border-radius: 24px; padding: 48px 38px; text-align: center;
+      max-width: 400px; width: 90%;
+      border: 2px solid var(--primary-green);
+      box-shadow: 0 20px 60px rgba(39,174,96,.3);
+      transform: scale(.8); transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .dark-mode  .win-modal { background: var(--dark-card); }
+    .light-mode .win-modal { background: white; }
+    .win-overlay.show .win-modal { transform: scale(1); }
+    .win-emoji  { font-size: 80px; display: block; margin-bottom: 14px; animation: winBounce .8s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes winBounce {
+      0%  { transform: scale(0) rotate(-10deg); }
+      60% { transform: scale(1.15) rotate(5deg); }
+      100%{ transform: scale(1) rotate(0); }
+    }
+    .win-title  { font-size: 32px; font-weight: 900; color: var(--primary-green-light); margin-bottom: 8px; }
+    .win-stats  { font-size: 15px; opacity: .7; margin-bottom: 26px; line-height: 1.6; }
+    .stars      { font-size: 38px; margin-bottom: 12px; letter-spacing: 5px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 580px) {
+      .game-title { font-size: 28px; }
+      .toy-emoji  { font-size: 38px; }
+      .toy-card   { min-height: 72px; padding: 10px 12px; }
+      .anchor-dot { width: 14px; height: 14px; }
+      .item-card .anchor-dot  { right: -7px; }
+      .shadow-card .anchor-dot{ left:  -7px; }
+    }
+  </style>
+</head>
+<body class="dark-mode">
+
+  <div class="theme-toggle">
+    <button id="themeBtn" class="btn-theme"><i class="bi bi-moon-fill"></i></button>
+  </div>
+
+  <!-- Win Modal -->
+  <div class="win-overlay" id="winOverlay">
+    <div class="win-modal">
+      <span class="win-emoji">🏆</span>
+      <div class="stars">⭐⭐⭐</div>
+      <div class="win-title">Incrível!</div>
+      <div class="win-stats" id="winStats">Você conectou todos os pares!</div>
+      <button class="btn-game btn-primary-game" onclick="restartGame()" style="margin:0 auto;display:flex;">
+        <i class="bi bi-arrow-clockwise"></i> Jogar de Novo
+      </button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="game-header">
+    <h1 class="game-title">Caminho das <span class="highlight">Sombras</span></h1>
+    <p class="game-subtitle">Arraste uma linha do brinquedo até a sombra certa!</p>
+
+    <div class="score-bar">
+      <div class="score-item">
+        <div class="score-value" id="scoreCorrect">0</div>
+        <div class="score-label">Acertos</div>
+      </div>
+      <div class="score-divider"></div>
+      <div class="score-item">
+        <div class="score-value" id="scoreTotal">5</div>
+        <div class="score-label">Total</div>
+      </div>
+    </div>
+
+    <div class="progress-dots" id="progressDots"></div>
+    <div class="instr-wrap">
+      <span class="instruction-bar" id="instructionBar">✏️ Arraste do brinquedo até sua sombra!</span>
+    </div>
+  </div>
+
+  <!-- Game Area -->
+  <div class="game-area-wrap" id="gameAreaWrap">
+    <!-- SVG drawing layer -->
+    <svg id="drawCanvas" xmlns="http://www.w3.org/2000/svg"></svg>
+
+    <div class="columns-grid">
+      <div>
+        <div class="col-header">🧸 Brinquedos</div>
+        <div class="toy-list" id="toyList"></div>
+      </div>
+      <div>
+        <div class="col-header">🌑 Sombras</div>
+        <div class="shadow-list" id="shadowList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-actions">
+    <button class="btn-game btn-primary-game" onclick="restartGame()">
+      <i class="bi bi-arrow-clockwise"></i> Novo Jogo
+    </button>
+    <button class="btn-game btn-secondary-game" onclick="requestHint()">
+      <i class="bi bi-lightbulb"></i> Dica
+    </button>
+  </div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  AUDIO ENGINE
+// ═══════════════════════════════════════════════
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playTone(freq, type, duration, vol, delay = 0) {
+  try {
+    ensureAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+    gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
+    gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + delay + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + duration + 0.05);
+  } catch(e){}
+}
+function playSoundCorrect() {
+  playTone(523.25,'sine',0.28,0.30,0.00);
+  playTone(659.25,'sine',0.28,0.30,0.11);
+  playTone(783.99,'sine',0.32,0.30,0.22);
+  playTone(1046.5,'sine',0.20,0.17,0.38);
+}
+function playSoundWin() {
+  [[523.25,.17,.00],[523.25,.17,.17],[783.99,.38,.34],
+   [698.46,.17,.76],[659.25,.17,.93],[587.33,.17,1.10],
+   [1046.5,.52,1.27]].forEach(([f,d,t])=>playTone(f,'sine',d,0.28,t));
+}
+function playSoundHint() {
+  playTone(392,'sine',0.26,0.16,0.00);
+  playTone(523,'sine',0.26,0.16,0.18);
+}
+function playSoundDrag() {
+  playTone(440,'sine',0.08,0.08);
+}
+
+// ═══════════════════════════════════════════════
+//  GAME DATA
+// ═══════════════════════════════════════════════
+const TOYS = [
+  { id:'dino',  name:'Dinossauro', emoji:'🦕' },
+  { id:'truck', name:'Caminhão',   emoji:'🚛' },
+  { id:'robot', name:'Robô',       emoji:'🤖' },
+  { id:'doll',  name:'Boneca',     emoji:'🪆' },
+  { id:'yoyo',  name:'Ioiô',       emoji:'🪀' },
+];
+
+// Line colors for each connection (distinct, accessible palette)
+const LINE_COLORS = ['#52BE80','#5DADE2','#F39C12','#A569BD','#E74C3C'];
+
+let itemOrder   = [];
+let shadowOrder = [];
+let matchedPairs = new Set();      // set of toy ids matched
+let connections  = {};             // toyId -> { lineEl, color }
+let colorIdx     = 0;
+
+// Drag state
+let dragging      = false;
+let dragSourceId  = null;          // toy id being dragged from
+let dragSourceEl  = null;          // item card element
+let dragLine      = null;          // live SVG line during drag
+let dragColor     = '#52BE80';
+
+let hintTimeout  = null;
+let instrTimeout = null;
+
+// ═══════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function setInstruction(text, isHint=false, clearAfter=0) {
+  clearTimeout(instrTimeout);
+  const bar = document.getElementById('instructionBar');
+  bar.textContent = text;
+  bar.classList.toggle('hint-mode', isHint);
+  if (clearAfter>0) instrTimeout = setTimeout(()=>bar.classList.remove('hint-mode'), clearAfter);
+}
+
+function clearHintGlow() {
+  clearTimeout(hintTimeout);
+  document.querySelectorAll('.hint-glow').forEach(c=>c.classList.remove('hint-glow'));
+}
+
+function updateScore() {
+  document.getElementById('scoreCorrect').textContent = matchedPairs.size;
+  document.getElementById('scoreTotal').textContent   = TOYS.length;
+}
+
+function fillNextDot() {
+  for (const dot of document.querySelectorAll('.dot')) {
+    if (!dot.classList.contains('filled')) { dot.classList.add('filled'); break; }
+  }
+}
+
+// Get center of anchor dot in SVG/wrap coordinate space
+function getAnchorCenter(card, side) {
+  const wrap = document.getElementById('gameAreaWrap');
+  const wrapRect = wrap.getBoundingClientRect();
+  const cardRect  = card.getBoundingClientRect();
+  const y = cardRect.top - wrapRect.top + cardRect.height / 2;
+  if (side === 'right') return { x: cardRect.right - wrapRect.left, y };
+  return { x: cardRect.left  - wrapRect.left, y };
+}
+
+// ═══════════════════════════════════════════════
+//  INIT & RENDER
+// ═══════════════════════════════════════════════
+function initGame() {
+  dragging     = false;
+  dragSourceId = null;
+  dragSourceEl = null;
+  dragLine     = null;
+  matchedPairs = new Set();
+  connections  = {};
+  colorIdx     = 0;
+  itemOrder    = shuffle(TOYS);
+  shadowOrder  = shuffle(TOYS);
+
+  // Clear SVG
+  const svg = document.getElementById('drawCanvas');
+  svg.innerHTML = '';
+
+  renderBoard();
+  renderDots();
+  updateScore();
+  setInstruction('✏️ Arraste do brinquedo até sua sombra!');
+}
+
+function renderBoard() {
+  const toyList    = document.getElementById('toyList');
+  const shadowList = document.getElementById('shadowList');
+  toyList.innerHTML    = '';
+  shadowList.innerHTML = '';
+
+  itemOrder.forEach((toy, i) => {
+    const card = document.createElement('div');
+    card.className = 'toy-card item-card';
+    card.dataset.id = toy.id;
+    card.style.animationDelay = `${i*0.07}s`;
+    card.innerHTML = `
+      <span class="toy-emoji">${toy.emoji}</span>
+      <div class="anchor-dot" data-id="${toy.id}" data-side="right"></div>
+      <span class="match-badge"><i class="bi bi-check2"></i></span>
+    `;
+    toyList.appendChild(card);
+  });
+
+  shadowOrder.forEach((toy, i) => {
+    const card = document.createElement('div');
+    card.className = 'toy-card shadow-card';
+    card.dataset.id = toy.id;
+    card.style.animationDelay = `${i*0.07}s`;
+    card.innerHTML = `
+      <span class="toy-emoji">${toy.emoji}</span>
+      <div class="anchor-dot" data-id="${toy.id}" data-side="left"></div>
+      <span class="match-badge"><i class="bi bi-check2"></i></span>
+    `;
+    shadowList.appendChild(card);
+  });
+
+  attachDragHandlers();
+}
+
+function renderDots() {
+  const c = document.getElementById('progressDots');
+  c.innerHTML = '';
+  TOYS.forEach(()=>{
+    const d = document.createElement('div');
+    d.className = 'dot';
+    c.appendChild(d);
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  SVG LINE HELPERS
+// ═══════════════════════════════════════════════
+function makeSVGLine(x1,y1,x2,y2,color,animated=false) {
+  const svg = document.getElementById('drawCanvas');
+  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+  line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+  line.setAttribute('stroke',color);
+  line.setAttribute('stroke-width','5');
+  line.setAttribute('stroke-linecap','round');
+  if (animated) {
+    // Draw-on animation using stroke-dasharray
+    const len = Math.hypot(x2-x1,y2-y1);
+    line.setAttribute('stroke-dasharray', len);
+    line.setAttribute('stroke-dashoffset', len);
+    line.style.transition = 'stroke-dashoffset 0.35s ease-out';
+    setTimeout(()=>line.setAttribute('stroke-dashoffset','0'),20);
+  } else {
+    line.style.opacity = '0.55';
+  }
+  // Glow filter
+  line.style.filter = `drop-shadow(0 0 4px ${color}99)`;
+  svg.appendChild(line);
+  return line;
+}
+
+function updateLine(line, x2, y2) {
+  line.setAttribute('x2',x2);
+  line.setAttribute('y2',y2);
+}
+
+function removeLine(line) {
+  if (line && line.parentNode) line.parentNode.removeChild(line);
+}
+
+// ═══════════════════════════════════════════════
+//  DRAG HANDLERS — mouse + touch
+// ═══════════════════════════════════════════════
+function attachDragHandlers() {
+  // Pointer events on item-card anchors (right side)
+  document.querySelectorAll('.item-card .anchor-dot').forEach(dot => {
+    dot.addEventListener('pointerdown', onDragStart, { passive:false });
+  });
+  // Also allow starting drag from anywhere on item card
+  document.querySelectorAll('.item-card').forEach(card => {
+    card.addEventListener('pointerdown', onDragStart, { passive:false });
+  });
+}
+
+function getEventPos(e) {
+  const wrap = document.getElementById('gameAreaWrap');
+  const rect = wrap.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+function onDragStart(e) {
+  e.preventDefault();
+
+  // Find the item-card
+  const card = e.currentTarget.closest ? e.currentTarget.closest('.item-card') || e.currentTarget : e.currentTarget;
+  if (!card.classList.contains('item-card')) return;
+
+  const id = card.dataset.id;
+  if (matchedPairs.has(id)) return;
+
+  clearHintGlow();
+  playSoundDrag();
+
+  dragging     = true;
+  dragSourceId = id;
+  dragSourceEl = card;
+  dragColor    = LINE_COLORS[colorIdx % LINE_COLORS.length];
+
+  card.classList.add('dragging');
+
+  // Remove existing line for this toy if re-drawing
+  if (connections[id]) {
+    removeLine(connections[id].lineEl);
+    delete connections[id];
+  }
+
+  const start = getAnchorCenter(card, 'right');
+  const pos   = getEventPos(e);
+  dragLine    = makeSVGLine(start.x, start.y, pos.x, pos.y, dragColor, false);
+  dragLine.style.opacity = '0.7';
+
+  const toy = TOYS.find(t=>t.id===id);
+  setInstruction(`${toy.emoji} Arraste até a sombra do ${toy.name}!`);
+
+  window.addEventListener('pointermove', onDragMove, { passive:false });
+  window.addEventListener('pointerup',   onDragEnd,  { passive:false });
+  window.addEventListener('touchmove',   onDragMove, { passive:false });
+  window.addEventListener('touchend',    onDragEnd,  { passive:false });
+}
+
+function onDragMove(e) {
+  if (!dragging) return;
+  e.preventDefault();
+  const pos = getEventPos(e);
+  updateLine(dragLine, pos.x, pos.y);
+
+  // Highlight shadow card under pointer
+  document.querySelectorAll('.shadow-card').forEach(c => {
+    const rect  = c.getBoundingClientRect();
+    const wrap  = document.getElementById('gameAreaWrap').getBoundingClientRect();
+    const px    = (e.touches ? e.touches[0].clientX : e.clientX);
+    const py    = (e.touches ? e.touches[0].clientY : e.clientY);
+    const over  = px>=rect.left && px<=rect.right && py>=rect.top && py<=rect.bottom;
+    c.style.borderColor = over && !matchedPairs.has(c.dataset.id)
+      ? dragColor : '';
+    c.style.boxShadow = over && !matchedPairs.has(c.dataset.id)
+      ? `0 0 0 3px ${dragColor}44` : '';
+  });
+}
+
+function onDragEnd(e) {
+  if (!dragging) return;
+  dragging = false;
+
+  window.removeEventListener('pointermove', onDragMove);
+  window.removeEventListener('pointerup',   onDragEnd);
+  window.removeEventListener('touchmove',   onDragMove);
+  window.removeEventListener('touchend',    onDragEnd);
+
+  // Reset shadow card highlights
+  document.querySelectorAll('.shadow-card').forEach(c => {
+    c.style.borderColor = '';
+    c.style.boxShadow   = '';
+  });
+  dragSourceEl.classList.remove('dragging');
+
+  // Find shadow card under pointer
+  const cx = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+  const cy = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+  let targetCard = null;
+  document.querySelectorAll('.shadow-card').forEach(c => {
+    const r = c.getBoundingClientRect();
+    if (cx>=r.left && cx<=r.right && cy>=r.top && cy<=r.bottom) targetCard = c;
+  });
+
+  if (!targetCard || matchedPairs.has(targetCard.dataset.id)) {
+    // Dropped on nothing valid — remove line, gentle hint
+    removeLine(dragLine);
+    dragLine = null;
+    playSoundHint();
+    // Highlight source card and its correct shadow
+    dragSourceEl.classList.add('hint-glow');
+    const correctShadow = document.querySelector(`.shadow-card[data-id="${dragSourceId}"]`);
+    if (correctShadow) correctShadow.classList.add('hint-glow');
+    const toy = TOYS.find(t=>t.id===dragSourceId);
+    setInstruction(`💡 Tente chegar até a sombra do ${toy.name}!`, true, 3000);
+    hintTimeout = setTimeout(()=>{
+      clearHintGlow();
+      setInstruction('✏️ Arraste do brinquedo até sua sombra!');
+    }, 3000);
+    dragSourceId = null; dragSourceEl = null; dragLine = null;
+    return;
+  }
+
+  const targetId = targetCard.dataset.id;
+
+  if (targetId === dragSourceId) {
+    // ── CORRECT! ──
+    colorIdx++;
+    const anchorEnd = getAnchorCenter(targetCard, 'left');
+    const anchorStart = getAnchorCenter(dragSourceEl, 'right');
+
+    // Replace live drag line with a snapped, animated final line
+    removeLine(dragLine);
+    const finalLine = makeSVGLine(
+      anchorStart.x, anchorStart.y,
+      anchorEnd.x,   anchorEnd.y,
+      dragColor, true
+    );
+    connections[dragSourceId] = { lineEl: finalLine, color: dragColor };
+
+    // Mark cards correct
+    dragSourceEl.classList.add('correct', 'matched');
+    targetCard.classList.add('correct', 'matched');
+
+    matchedPairs.add(dragSourceId);
+    fillNextDot();
+    updateScore();
+    playSoundCorrect();
+
+    const toy = TOYS.find(t=>t.id===dragSourceId);
+    setInstruction(`🌟 Incrível! Você conectou o ${toy.name}! 🎉`);
+
+    // Sparkle particles on the line
+    spawnParticles(anchorStart.x, anchorStart.y, anchorEnd.x, anchorEnd.y, dragColor);
+
+    if (matchedPairs.size === TOYS.length) {
+      setTimeout(showWin, 800);
+    } else {
+      setTimeout(()=>setInstruction('✏️ Continue! Conecte outro brinquedo!'), 2000);
+    }
+  } else {
+    // ── NOT CORRECT — gentle hint, no punishment ──
+    removeLine(dragLine);
+    dragLine = null;
+    playSoundHint();
+
+    const correctShadow = document.querySelector(`.shadow-card[data-id="${dragSourceId}"]`);
+    dragSourceEl.classList.add('hint-glow');
+    if (correctShadow) correctShadow.classList.add('hint-glow');
+
+    const toy = TOYS.find(t=>t.id===dragSourceId);
+    setInstruction(`💡 Olha bem! Qual sombra tem a forma do ${toy.name}?`, true, 3200);
+    hintTimeout = setTimeout(()=>{
+      clearHintGlow();
+      setInstruction('✏️ Arraste do brinquedo até sua sombra!');
+    }, 3200);
+  }
+
+  dragSourceId = null; dragSourceEl = null; dragLine = null;
+}
+
+// ═══════════════════════════════════════════════
+//  SPARKLE PARTICLES (canvas overlay)
+// ═══════════════════════════════════════════════
+function spawnParticles(x1,y1,x2,y2,color) {
+  const wrap = document.getElementById('gameAreaWrap');
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:30;';
+  canvas.width  = wrap.offsetWidth;
+  canvas.height = wrap.offsetHeight;
+  wrap.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  const mx = (x1+x2)/2, my = (y1+y2)/2;
+  const particles = Array.from({length:22},()=>({
+    x: mx + (Math.random()-0.5)*40,
+    y: my + (Math.random()-0.5)*40,
+    vx:(Math.random()-0.5)*4,
+    vy:(Math.random()-0.7)*5,
+    r: Math.random()*5+3,
+    alpha:1,
+    color: Math.random()>.5 ? color : '#FFF'
+  }));
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      p.x  += p.vx; p.y += p.vy; p.vy += 0.18;
+      p.alpha -= 0.028;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0,p.alpha);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 55) requestAnimationFrame(animate);
+    else wrap.removeChild(canvas);
+  }
+  requestAnimationFrame(animate);
+}
+
+// ═══════════════════════════════════════════════
+//  HINT BUTTON
+// ═══════════════════════════════════════════════
+function requestHint() {
+  clearHintGlow();
+  const unmatched = TOYS.filter(t=>!matchedPairs.has(t.id));
+  if (!unmatched.length) return;
+  const target = unmatched[Math.floor(Math.random()*unmatched.length)];
+
+  const ic = document.querySelector(`.item-card[data-id="${target.id}"]`);
+  const sc = document.querySelector(`.shadow-card[data-id="${target.id}"]`);
+  [ic,sc].forEach(c=>{ if(c) c.classList.add('hint-glow'); });
+
+  playSoundHint();
+  setInstruction(`💡 Tente conectar o ${target.name} — ele está brilhando!`, true, 3500);
+  hintTimeout = setTimeout(()=>{
+    clearHintGlow();
+    setInstruction('✏️ Arraste do brinquedo até sua sombra!');
+  }, 3500);
+}
+
+// ═══════════════════════════════════════════════
+//  WIN
+// ═══════════════════════════════════════════════
+function showWin() {
+  playSoundWin();
+  document.getElementById('winStats').textContent = `Você conectou todos os ${TOYS.length} brinquedos! Você é demais! 🎊`;
+  document.getElementById('winOverlay').classList.add('show');
+}
+
+function restartGame() {
+  document.getElementById('winOverlay').classList.remove('show');
+  clearHintGlow();
+  setTimeout(initGame, 300);
+}
+
+// ═══════════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════════
+const themeBtn   = document.getElementById('themeBtn');
+const savedTheme = localStorage.getItem('theme') || 'dark-mode';
+document.body.classList.add(savedTheme);
+updateThemeIcon();
+
+themeBtn.addEventListener('click', ()=>{
+  const dark = document.body.classList.contains('dark-mode');
+  document.body.classList.replace(dark?'dark-mode':'light-mode', dark?'light-mode':'dark-mode');
+  localStorage.setItem('theme', dark?'light-mode':'dark-mode');
+  updateThemeIcon();
+  renderBoard();
+  // Redraw completed connections after re-render
+  setTimeout(()=>{
+    const svg = document.getElementById('drawCanvas');
+    svg.innerHTML = '';
+    Object.entries(connections).forEach(([id,{color}])=>{
+      const ic = document.querySelector(`.item-card[data-id="${id}"]`);
+      const sc = document.querySelector(`.shadow-card[data-id="${id}"]`);
+      if (ic && sc) {
+        const s = getAnchorCenter(ic,'right');
+        const e = getAnchorCenter(sc,'left');
+        connections[id].lineEl = makeSVGLine(s.x,s.y,e.x,e.y,color,false);
+        connections[id].lineEl.style.opacity='1';
+      }
+    });
+  },100);
+});
+
+function updateThemeIcon() {
+  themeBtn.querySelector('i').className = document.body.classList.contains('dark-mode')
+    ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+}
+
+// ── Resize: redraw lines ──
+window.addEventListener('resize', ()=>{
+  const svg = document.getElementById('drawCanvas');
+  svg.innerHTML = '';
+  Object.entries(connections).forEach(([id,{color}])=>{
+    const ic = document.querySelector(`.item-card[data-id="${id}"]`);
+    const sc = document.querySelector(`.shadow-card[data-id="${id}"]`);
+    if (ic && sc) {
+      const s = getAnchorCenter(ic,'right');
+      const e = getAnchorCenter(sc,'left');
+      connections[id].lineEl = makeSVGLine(s.x,s.y,e.x,e.y,color,false);
+      connections[id].lineEl.style.opacity='1';
+    }
+  });
+});
+
+// ─── START ───
+initGame();
+</script>
+</body>
+</html>
